@@ -2,7 +2,12 @@
 #define LIB_H_INCLUDED
 #include <stdio.h>
 #include <stdlib.h>
-
+#define MAX_ITEMS 50
+#define MAX_CHAR 20
+typedef struct herramientas{
+    int id,stock;
+    char [MAX_ITEMS][MAX_CHAR];
+}herramienta;
 
 
 #endif // LIB_H_INCLUDED

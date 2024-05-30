@@ -15,4 +15,6 @@ herramienta listarHerramienta(int id_buscado);
 herramienta listadoHerramientas();
 
 void printMenu();
+void ordenarId(int id[], int longitud);
+void copiarVector(int vectorLeido[MAX_ITEMS],int vectorCopiado[MAX_ITEMS], int longitud);
 #endif // LIB_H_INCLUDED

@@ -5,9 +5,10 @@
 #define MAX_ITEMS 50
 #define MAX_CHAR 20
 typedef struct herramientas{
-    int id,stock;
+    int id,stock,estado;
     char [MAX_ITEMS][MAX_CHAR];
 }herramienta;
 
-
+herramientas leerHerramientas(int cantidad);
+void printMenu();
 #endif // LIB_H_INCLUDED

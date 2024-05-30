@@ -10,7 +10,7 @@ herramienta obj;
 void printMenu()
 {
     int op,salir,i,id,longitud,copiaId[MAX_ITEMS];
-    longitud=MAX_ITEMS;
+//    longitud=MAX_ITEMS;
     salir=1;
     i=0;
     do
@@ -20,6 +20,7 @@ void printMenu()
         printf("\n 1) Agregar herramienta \n");
         printf("\n 2) Listar inventario \n");
         printf("\n 3) Lista de todas las herramientas \n");
+        printf("\n 4) Prestar herramienta \n");
         fflush(stdin);
         scanf("%d",&op);
         system("cls");
@@ -44,18 +45,38 @@ void printMenu()
                 printf("Ingrese el identificador de la herramienta \n");
                 fflush(stdin);
                 scanf("%d",&id);
-                listarHerramienta(id);
+                if(buscarId(id)!=-1)  //contador=-1 es un valor restringido
+                {
+                    listarHerramienta(buscarId(id));
+                }
+                else
+                {
+                    printf("\n HERRAMIENTA NO REGISTRADA \n");
+                }
+
                 break;
 
             case 3:
                 listadoHerramientas();
+                break;
 
+            case 4:
+                printf("Ingrese el identificador de la herramienta \n");
+                fflush(stdin);
+                scanf("%d",&id);
+                if(buscarId(id)!=-1)  //contador=-1 es un valor restringido
+                {
+                    prestarHerramienta(buscarId(id));
+                }
+                else
+                {
+                    printf("\n HERRAMIENTA NO REGISTRADA \n");
+                }
                 break;
 
             }
         }
-        copiarVector(obj.id,copiaId,longitud);
-        ordenarId(copiaId,longitud);
+//        copiarVector(obj.id,copiaId,longitud);
         i++;
     }
     while(op<1 || op>3 || salir==1);
@@ -64,14 +85,14 @@ void printMenu()
 }
 
 //este vector copia el contenido "desordenado" que tiene obj.id[] para poder con dicha copia procesarlo en ordenarId(). proceso que puede servir mas adelante
-void copiarVector(int vectorLeido[MAX_ITEMS],int vectorCopiado[MAX_ITEMS], int longitud)
-{
-    int i;
-    for(i=0; i<longitud; i++)
-    {
-        vectorCopiado[i]=vectorLeido[i];
-    }
-}
+//void copiarVector(int vectorLeido[MAX_ITEMS],int vectorCopiado[MAX_ITEMS], int longitud)
+//{
+//    int i;
+//    for(i=0; i<longitud; i++)
+//    {
+//        vectorCopiado[i]=vectorLeido[i];
+//    }
+//}
 
 //pasamos como parámetro la posición iterada en la que se encuentra el usuario al momento de realizar la operación
 herramienta leerHerramientas(int iteracion)
@@ -89,20 +110,11 @@ herramienta leerHerramientas(int iteracion)
 }
 
 //pasamos como parámetro el contenido del id que el usuario desea encontrar en nuestro array de datos estructurados
-herramienta listarHerramienta(int id_buscado)
+herramienta listarHerramienta(int contador)
 {
-    int contador;
-    contador=0;
-    //si id_buscado es diferente que obj.id[contador], incrementamos el contador hasta como límite la longitud máxima de la lista
-    while(id_buscado!=obj.id[contador] && contador<MAX_ITEMS)contador++;
-    //si el contador se detiene antes de completar la lista quiere decir que encontramos la coincidencia, por ende procedemos a imprimir los datos
-    if(contador<MAX_ITEMS)
-    {
-        printf("ID HERRAMIENTA: %d \n",obj.id[contador]);
-        printf("NOMBRE HERRAMIENTA: %s \n",obj.nombre[contador]);
-        printf("STOCK DISPONIBLE: %d \n",obj.stock[contador]);
-
-    }
+    printf("ID HERRAMIENTA: %d \n",obj.id[contador]);
+    printf("NOMBRE HERRAMIENTA: %s \n",obj.nombre[contador]);
+    printf("STOCK DISPONIBLE: %d \n",obj.stock[contador]);
 }
 
 
@@ -113,31 +125,62 @@ herramienta listadoHerramientas()
     //imprimimos todas aquellas herramientas que no se encuentren vacías. (vacías estarían si su id fuese 0, restricción necesaria)
     while(i<MAX_ITEMS && obj.id[i]!=0)
     {
-            printf("\n ID DE HERRAMIENTA: %d \n",obj.id[i]);
-            printf("\n NOMBRE DE HERRAMIENTA: %s \n",obj.nombre[i]);
-            printf("STOCK DISPONIBLE: %d \n",obj.stock[i]);
-            i++;
+        printf("\n ID DE HERRAMIENTA: %d \n",obj.id[i]);
+        printf("\n NOMBRE DE HERRAMIENTA: %s \n",obj.nombre[i]);
+        printf("STOCK DISPONIBLE: %d \n",obj.stock[i]);
+        i++;
     }
 }
+
+int buscarId(int id_buscado)
+{
+    int contador;
+    contador=0;
+    //si id_buscado es diferente que obj.id[contador], incrementamos el contador hasta como límite la longitud máxima de la lista
+    while(id_buscado!=obj.id[contador] && contador<MAX_ITEMS)contador++;
+    //si el contador se detiene antes de completar la lista quiere decir que encontramos la coincidencia, por ende procedemos a imprimir los datos
+    if(contador<MAX_ITEMS)
+    {
+        return contador;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+herramienta prestarHerramienta(int indice){
+    int unidades;
+    listarHerramienta(indice);
+    do{
+    printf("Seleccione unidades a prestar (NO SUPERAR EL STOCK DISPONIBLE): \n");
+    fflush(stdin); scanf("%d",&unidades);}while(unidades>obj.stock[indice]);
+    obj.stock[indice]-=unidades;
+    system("cls");
+    listarHerramienta(indice);
+
+
+}
+
 
 //procedimiento de ordenamiendo del vector identificador por método de inserción
-void ordenarId(int id[], int longitud)
-{
-    int i, clave, j;
-
-    for(i=1; i<longitud; i++)
-    {
-        clave=id[i];
-        j=i-1;
-
-        while(j>=0 && id[j]>clave)
-        {
-            id[j+1]=id[j];
-            j-=1;
-        }
-        id[j+1]=clave;
-    }
-}
+//void ordenarId(int id[], int longitud)
+//{
+//    int i, clave, j;
+//
+//    for(i=1; i<longitud; i++)
+//    {
+//        clave=id[i];
+//        j=i-1;
+//
+//        while(j>=0 && id[j]>clave)
+//        {
+//            id[j+1]=id[j];
+//            j-=1;
+//        }
+//        id[j+1]=clave;
+//    }
+//}
 
 
 

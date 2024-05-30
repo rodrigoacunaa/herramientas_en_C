@@ -11,10 +11,13 @@ typedef struct herramientas{
 }herramienta;
 
 herramienta leerHerramientas(int iteracion);
-herramienta listarHerramienta(int id_buscado);
+herramienta listarHerramienta(int contador);
 herramienta listadoHerramientas();
+herramienta prestarHerramienta(int indice);
+
+int buscarId(int id_buscado);
 
 void printMenu();
-void ordenarId(int id[], int longitud);
-void copiarVector(int vectorLeido[MAX_ITEMS],int vectorCopiado[MAX_ITEMS], int longitud);
+//void ordenarId(int id[], int longitud);
+//void copiarVector(int vectorLeido[MAX_ITEMS],int vectorCopiado[MAX_ITEMS], int longitud);
 #endif // LIB_H_INCLUDED

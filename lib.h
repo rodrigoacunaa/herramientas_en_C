@@ -2,6 +2,7 @@
 #define LIB_H_INCLUDED
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #define MAX_ITEMS 50
 #define MAX_CHAR 20
 #define MAX_STOCK 100
@@ -16,6 +17,7 @@ herramienta listadoHerramientas();
 herramienta prestarHerramienta(int indice);
 
 int buscarId(int id_buscado);
+int longitud_de_entero(int entero);
 
 void printMenu();
 //void ordenarId(int id[], int longitud);

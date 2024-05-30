@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "lib.h"
 #define MAX_ITEMS 50
 #define MAX_CHAR 20
@@ -38,6 +39,7 @@ void printMenu()
             {
             case 1:
                 leerHerramientas(i);
+                system("pause");
                 salir=1;
                 break;
 
@@ -53,7 +55,7 @@ void printMenu()
                 {
                     printf("\n HERRAMIENTA NO REGISTRADA \n");
                 }
-
+                    system("pause");
                 break;
 
             case 3:
@@ -97,9 +99,12 @@ void printMenu()
 //pasamos como parámetro la posición iterada en la que se encuentra el usuario al momento de realizar la operación
 herramienta leerHerramientas(int iteracion)
 {
-    printf("Ingrese el identificador de la herramienta \n");
+    int idInput;
+    do{
+    printf("Ingrese el identificador de la herramienta (SOLO SE ADMITEN ENTEROS POSITIVOS DE 4 DIGITOS)\n");
     fflush(stdin);
-    scanf("%d",&obj.id[iteracion]);
+    scanf("%d",&idInput);}while(idInput<0 || longitud_de_entero(idInput)!=4);
+    obj.id[iteracion]=idInput;
     printf("Ingrese el nombre de la herramienta \n");
     fflush(stdin);
     gets(obj.nombre[iteracion]);
@@ -154,12 +159,20 @@ herramienta prestarHerramienta(int indice){
     listarHerramienta(indice);
     do{
     printf("Seleccione unidades a prestar (NO SUPERAR EL STOCK DISPONIBLE): \n");
-    fflush(stdin); scanf("%d",&unidades);}while(unidades>obj.stock[indice]);
+    fflush(stdin); scanf("%d",&unidades);}while(unidades>obj.stock[indice] || unidades<0);
     obj.stock[indice]-=unidades;
     system("cls");
     listarHerramienta(indice);
+    system("pause");
 
 
+}
+
+int longitud_de_entero(int entero){
+    if(entero==0){
+        return 1;
+    }
+    return floor(log10(entero))+1;
 }
 
 

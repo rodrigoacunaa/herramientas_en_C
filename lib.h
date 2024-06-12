@@ -9,11 +9,6 @@ typedef struct herramientas{
     char nombre[MAX_CHAR];
 }herramienta;
 
-herramienta leerHerramientas(int iteracion);
-herramienta listarHerramienta(int contador);
-herramienta listadoHerramientas();
-herramienta prestarHerramienta(int indice);
-
 int buscarId(int id_buscado);
 int longitud_de_entero(int entero);
 int num_items_reg();
@@ -21,7 +16,8 @@ int num_items_reg();
 
 void printMenu();
 void cargarHerramientaArch();
-void buscarHerramientaArch();
+void buscarHerramientaArch(int idBuscado);
 void imprimirHerramienta(FILE * archivo);
+void prestarHerramientaArch();
 
 #endif // LIB_H_INCLUDED

@@ -11,7 +11,7 @@ herramienta obj;
 
 void printMenu()
 {
-    int op,salir,i,id;
+    int op,salir,i,id,idBuscado;
     salir=1;
     i=0;
     do
@@ -43,7 +43,14 @@ void printMenu()
                 break;
 
             case 2:
-                buscarHerramientaArch();
+                do
+                {
+                    printf("Ingrese el identificador de la herramienta (SOLO SE ADMITEN ENTEROS POSITIVOS DE 4 DIGITOS)\n");
+                    fflush(stdin);
+                    scanf("%d",&idBuscado);
+                }
+                while(idBuscado<0 || longitud_de_entero(idBuscado)!=4);
+                buscarHerramientaArch(idBuscado);
                 system("pause");
                 break;
 
@@ -55,7 +62,13 @@ void printMenu()
             case 4:
                 printf("Ingrese el identificador de la herramienta \n");
                 fflush(stdin);
-                scanf("%d",&id);
+                scanf("%d",&idBuscado);
+                if(existeId(idBuscado)==1){
+                    //reutilizamos el procedimiento de la op 2 para mostrarle al usuario el formato de la herramienta
+                    buscarHerramientaArch(idBuscado);
+                    printf("\n");
+                    prestarHerramientaArch(idBuscado);
+                }
                 break;
 
             }
@@ -135,7 +148,8 @@ void listarHerramientasArch()
     if(archivo!=NULL)
     {
         //mientras el puntero tenga que leer..
-        while(!feof(archivo)){
+        while(!feof(archivo))
+        {
             printf("\n");
             imprimirHerramienta(archivo);
         }
@@ -147,20 +161,11 @@ void listarHerramientasArch()
     }
 }
 
-void buscarHerramientaArch()
+void buscarHerramientaArch(int idBuscado)
 {
     FILE *archivo = fopen(NOM_ARCHIVO, "rb");
-    int idBuscado;
     if(archivo!=NULL)
     {
-        do
-        {
-            printf("Ingrese el identificador de la herramienta (SOLO SE ADMITEN ENTEROS POSITIVOS DE 4 DIGITOS)\n");
-            fflush(stdin);
-            scanf("%d",&idBuscado);
-        }
-        while(idBuscado<0 || longitud_de_entero(idBuscado)!=4);
-
         while (!feof(archivo))//mientras el puntero tenga para leer..
         {
 
@@ -189,12 +194,7 @@ void buscarHerramientaArch()
         }
         printf("Herramienta no encontrada \n");
         fclose(archivo);
-
-
     }
-
-
-
 }
 
 
@@ -233,20 +233,40 @@ int existeId(idInput)
 
 }
 
-void imprimirHerramienta(FILE * archivo){
+void imprimirHerramienta(FILE * archivo)
+{
 
-            if(fread(&obj.id,sizeof(obj.id),1,archivo)==1)
-            {
-                printf("ID: %d\n", obj.id);
-            }
+    if(fread(&obj.id,sizeof(obj.id),1,archivo)==1)
+    {
+        printf("ID: %d\n", obj.id);
+    }
 
-            if(fread(&obj.nombre,sizeof(obj.nombre),1,archivo)==1)
-            {
-                printf("Nombre: %s\n", obj.nombre);
-            }
+    if(fread(&obj.nombre,sizeof(obj.nombre),1,archivo)==1)
+    {
+        printf("Nombre: %s\n", obj.nombre);
+    }
 
-            if(fread(&obj.stock,sizeof(obj.stock),1,archivo)==1)
-            {
-                printf("Stock: %d\n", obj.stock);
-            }
+    if(fread(&obj.stock,sizeof(obj.stock),1,archivo)==1)
+    {
+        printf("Stock: %d\n", obj.stock);
+    }
 }
+
+void prestarHerramientaArch(int idBuscado){
+        int cantidadSol,cantidadDisponible;
+
+        //solicitamos al usuario que ingrese la cantidad a prestar..
+        FILE *archivo = fopen(NOM_ARCHIVO, "rb");
+        if(fread(&obj,sizeof(obj),1,archivo)==1){
+            cantidadDisponible=obj.stock;
+            printf("Cant disp: %d \n",cantidadDisponible);
+        }
+        //if(archivo!=NULL){}
+
+//        do{
+//            printf("Ingrese la cantidad a prestar (debe ser <= a la cantidad disponible) \n");
+//            fflush(stdin);
+//            scanf("%d",&cantidadSol);
+//        }while(cantidadDisponible<cantidadSol);
+}
+

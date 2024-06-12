@@ -11,7 +11,7 @@ herramienta obj;
 
 void printMenu()
 {
-    int op,salir,i,id,longitud,copiaId[MAX_ITEMS];
+    int op,salir,i,id;
     salir=1;
     i=0;
     do

@@ -5,13 +5,13 @@
 #define MAX_ITEMS 50
 #define MAX_CHAR 20
 #define MAX_STOCK 100
+#define NOM_ARCHIVO "herramientas.dat"
 
 herramienta obj;
 
 void printMenu()
 {
     int op,salir,i,id,longitud,copiaId[MAX_ITEMS];
-//    longitud=MAX_ITEMS;
     salir=1;
     i=0;
     do
@@ -19,15 +19,13 @@ void printMenu()
         printf("Bienvenido usuario! Elige tu operacion (SOLO OPCIONES VALIDAS) \n");
         printf("\n 0) Cerrar \n");
         printf("\n 1) Agregar herramienta \n");
-        printf("\n 2) Listar inventario \n");
+        printf("\n 2) Buscar herramienta \n");
         printf("\n 3) Lista de todas las herramientas \n");
         printf("\n 4) Prestar herramienta \n");
         fflush(stdin);
         scanf("%d",&op);
         system("cls");
 
-        //si el usuario ingresa 0, nos salteamos la ejecución a iterar para pasar a comprobar la condición del
-        //do while
         if(op==0)
         {
             salir=0;
@@ -38,47 +36,30 @@ void printMenu()
             switch(op)
             {
             case 1:
-                leerHerramientas(i);
+                cargarHerramientaArch();
+                printf("\n");
                 system("pause");
                 salir=1;
                 break;
 
             case 2:
-                printf("Ingrese el identificador de la herramienta \n");
-                fflush(stdin);
-                scanf("%d",&id);
-                if(buscarId(id)!=-1)  //contador=-1 es un valor restringido
-                {
-                    listarHerramienta(buscarId(id));
-                }
-                else
-                {
-                    printf("\n HERRAMIENTA NO REGISTRADA \n");
-                }
-                    system("pause");
+                buscarHerramientaArch();
+                system("pause");
                 break;
 
             case 3:
-                listadoHerramientas();
+                listarHerramientasArch();
+                system("pause");
                 break;
 
             case 4:
                 printf("Ingrese el identificador de la herramienta \n");
                 fflush(stdin);
                 scanf("%d",&id);
-                if(buscarId(id)!=-1)  //contador=-1 es un valor restringido
-                {
-                    prestarHerramienta(buscarId(id));
-                }
-                else
-                {
-                    printf("\n HERRAMIENTA NO REGISTRADA \n");
-                }
                 break;
 
             }
         }
-//        copiarVector(obj.id,copiaId,longitud);
         i++;
     }
     while(op<1 || op>3 || salir==1);
@@ -86,115 +67,186 @@ void printMenu()
 
 }
 
-//este vector copia el contenido "desordenado" que tiene obj.id[] para poder con dicha copia procesarlo en ordenarId(). proceso que puede servir mas adelante
-//void copiarVector(int vectorLeido[MAX_ITEMS],int vectorCopiado[MAX_ITEMS], int longitud)
-//{
-//    int i;
-//    for(i=0; i<longitud; i++)
-//    {
-//        vectorCopiado[i]=vectorLeido[i];
-//    }
-//}
-
-//pasamos como parámetro la posición iterada en la que se encuentra el usuario al momento de realizar la operación
-herramienta leerHerramientas(int iteracion)
+int longitud_de_entero(int entero)
 {
-    int idInput;
-    do{
-    printf("Ingrese el identificador de la herramienta (SOLO SE ADMITEN ENTEROS POSITIVOS DE 4 DIGITOS)\n");
-    fflush(stdin);
-    scanf("%d",&idInput);}while(idInput<0 || longitud_de_entero(idInput)!=4);
-    obj.id[iteracion]=idInput;
-    printf("Ingrese el nombre de la herramienta \n");
-    fflush(stdin);
-    gets(obj.nombre[iteracion]);
-    printf("Ingrese el stock disponible \n");
-    fflush(stdin);
-    scanf("%d",&obj.stock[iteracion]);
-
-}
-
-//pasamos como parámetro el contenido del id que el usuario desea encontrar en nuestro array de datos estructurados
-herramienta listarHerramienta(int contador)
-{
-    printf("ID HERRAMIENTA: %d \n",obj.id[contador]);
-    printf("NOMBRE HERRAMIENTA: %s \n",obj.nombre[contador]);
-    printf("STOCK DISPONIBLE: %d \n",obj.stock[contador]);
-}
-
-
-herramienta listadoHerramientas()
-{
-    int i;
-    i=0;
-    //imprimimos todas aquellas herramientas que no se encuentren vacías. (vacías estarían si su id fuese 0, restricción necesaria)
-    while(i<MAX_ITEMS && obj.id[i]!=0)
+    if(entero==0)
     {
-        printf("\n ID DE HERRAMIENTA: %d \n",obj.id[i]);
-        printf("\n NOMBRE DE HERRAMIENTA: %s \n",obj.nombre[i]);
-        printf("STOCK DISPONIBLE: %d \n",obj.stock[i]);
-        i++;
-    }
-}
-
-int buscarId(int id_buscado)
-{
-    int contador;
-    contador=0;
-    //si id_buscado es diferente que obj.id[contador], incrementamos el contador hasta como límite la longitud máxima de la lista
-    while(id_buscado!=obj.id[contador] && contador<MAX_ITEMS)contador++;
-    //si el contador se detiene antes de completar la lista quiere decir que encontramos la coincidencia, por ende procedemos a imprimir los datos
-    if(contador<MAX_ITEMS)
-    {
-        return contador;
-    }
-    else
-    {
-        return -1;
-    }
-}
-
-herramienta prestarHerramienta(int indice){
-    int unidades;
-    listarHerramienta(indice);
-    do{
-    printf("Seleccione unidades a prestar (NO SUPERAR EL STOCK DISPONIBLE): \n");
-    fflush(stdin); scanf("%d",&unidades);}while(unidades>obj.stock[indice] || unidades<0);
-    obj.stock[indice]-=unidades;
-    system("cls");
-    listarHerramienta(indice);
-    system("pause");
-
-
-}
-
-int longitud_de_entero(int entero){
-    if(entero==0){
         return 1;
     }
     return floor(log10(entero))+1;
 }
 
+void cargarHerramientaArch()
+{
+    int idInput;
+    do
+    {
+        printf("Ingrese el identificador de la herramienta (SOLO SE ADMITEN ENTEROS POSITIVOS DE 4 DIGITOS)\n");
+        fflush(stdin);
+        scanf("%d",&idInput);
+    }
+    while(idInput<0 || longitud_de_entero(idInput)!=4);
+    system("cls");
 
-//procedimiento de ordenamiendo del vector identificador por método de inserción
-//void ordenarId(int id[], int longitud)
-//{
-//    int i, clave, j;
-//
-//    for(i=1; i<longitud; i++)
-//    {
-//        clave=id[i];
-//        j=i-1;
-//
-//        while(j>=0 && id[j]>clave)
-//        {
-//            id[j+1]=id[j];
-//            j-=1;
-//        }
-//        id[j+1]=clave;
-//    }
-//}
+    if(existeId(idInput)==0)//si el id no está registrado, procedemos
+    {
+        FILE * archivo;
+        archivo=fopen(NOM_ARCHIVO,"ab");
+        if(archivo!=NULL)
+        {
+            obj.id = idInput;//usamos obj.id para guardar el idInput
+
+            printf("Ingrese el nombre de herramienta \n");
+            fflush(stdin);
+            gets(obj.nombre);
+
+            printf("Ingrese el stock disponible \n");
+            fflush(stdin);
+            scanf("%d",&obj.stock);
+
+            fwrite(&obj.id, sizeof(obj.id), 1, archivo);
+            fwrite(&obj.nombre, sizeof(obj.nombre), 1, archivo);
+            fwrite(&obj.stock, sizeof(obj.stock), 1, archivo);
+
+            if(fclose(archivo)==0)
+            {
+                printf("Archivo correctamente guardado \n");
+                return;
+            }
+            else
+            {
+                printf("No se pudo guardar el archivo \n");
+            }
+        }
+    }
+    else
+    {
+        printf("ID ya registrado \n");
+    }
 
 
 
 
+}
+
+void listarHerramientasArch()
+{
+    FILE * archivo = fopen(NOM_ARCHIVO,"rb");
+    if(archivo!=NULL)
+    {
+        //mientras el puntero tenga que leer..
+        while(!feof(archivo)){
+            printf("\n");
+            imprimirHerramienta(archivo);
+        }
+        fclose(archivo);
+    }
+    else
+    {
+        printf("No se pudo abrir el archivo \n");
+    }
+}
+
+void buscarHerramientaArch()
+{
+    FILE *archivo = fopen(NOM_ARCHIVO, "rb");
+    int idBuscado;
+    if(archivo!=NULL)
+    {
+        do
+        {
+            printf("Ingrese el identificador de la herramienta (SOLO SE ADMITEN ENTEROS POSITIVOS DE 4 DIGITOS)\n");
+            fflush(stdin);
+            scanf("%d",&idBuscado);
+        }
+        while(idBuscado<0 || longitud_de_entero(idBuscado)!=4);
+
+        while (!feof(archivo))//mientras el puntero tenga para leer..
+        {
+
+            if(fread(&obj.id, sizeof(obj.id), 1, archivo)==1)
+            {
+                if (obj.id == idBuscado)//coincide?
+                {
+                    printf("ID: %d\n", obj.id);//imprimimos el id leido que coincide
+
+                    if(fread(&obj.nombre,sizeof(obj.nombre),1,archivo)==1)
+                    {
+                        printf("Nombre: %s\n", obj.nombre);
+                    }
+
+                    if(fread(&obj.stock,sizeof(obj.stock),1,archivo)==1)
+                    {
+                        printf("Stock: %d\n", obj.stock);
+                    }
+
+                    fclose(archivo);
+                    return;
+
+                }
+            }
+
+        }
+        printf("Herramienta no encontrada \n");
+        fclose(archivo);
+
+
+    }
+
+
+
+}
+
+
+int num_items_reg()
+{
+    FILE *archivo = fopen(NOM_ARCHIVO, "rb");
+    int n_actual;
+    n_actual=0;
+
+    while (fread(&obj.id, sizeof(obj.id), 1, archivo)==1)n_actual++;
+    return n_actual;
+
+
+}
+
+
+int existeId(idInput)
+{
+    FILE * archivo = fopen(NOM_ARCHIVO,"rb");
+    if(archivo!=NULL)
+    {
+        while (!feof(archivo)) //mientras el puntero tenga para leer..
+        {
+            if(fread(&obj.id, sizeof(obj.id), 1, archivo)==1)
+            {
+                if (obj.id==idInput)
+                {
+                    fclose(archivo);
+                    return 1;//ID encontrado
+                }
+            }
+        }
+        fclose(archivo);
+    }
+    return 0;//ID no encontrado
+
+}
+
+void imprimirHerramienta(FILE * archivo){
+
+            if(fread(&obj.id,sizeof(obj.id),1,archivo)==1)
+            {
+                printf("ID: %d\n", obj.id);
+            }
+
+            if(fread(&obj.nombre,sizeof(obj.nombre),1,archivo)==1)
+            {
+                printf("Nombre: %s\n", obj.nombre);
+            }
+
+            if(fread(&obj.stock,sizeof(obj.stock),1,archivo)==1)
+            {
+                printf("Stock: %d\n", obj.stock);
+            }
+}

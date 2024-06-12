@@ -19,5 +19,6 @@ void cargarHerramientaArch();
 void buscarHerramientaArch(int idBuscado);
 void imprimirHerramienta(FILE * archivo);
 void prestarHerramientaArch();
+void resetArchivo();
 
 #endif // LIB_H_INCLUDED

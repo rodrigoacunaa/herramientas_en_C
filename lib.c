@@ -22,6 +22,7 @@ void printMenu()
         printf("\n 2) Buscar herramienta \n");
         printf("\n 3) Lista de todas las herramientas \n");
         printf("\n 4) Prestar herramienta \n");
+        printf("\n 5) Resetear (Vaciamiento) lista \n");
         fflush(stdin);
         scanf("%d",&op);
         system("cls");
@@ -60,15 +61,21 @@ void printMenu()
                 break;
 
             case 4:
+                idBuscado=0;
                 printf("Ingrese el identificador de la herramienta \n");
                 fflush(stdin);
                 scanf("%d",&idBuscado);
-                if(existeId(idBuscado)==1){
+                if(existeId(idBuscado)==1)
+                {
+//                    printf("ID BUSCADO: %d",idBuscado);
                     //reutilizamos el procedimiento de la op 2 para mostrarle al usuario el formato de la herramienta
-                    buscarHerramientaArch(idBuscado);
-                    printf("\n");
+                    //buscarHerramientaArch(idBuscado);
                     prestarHerramientaArch(idBuscado);
                 }
+                break;
+
+            case 5:
+                resetArchivo();
                 break;
 
             }
@@ -252,21 +259,103 @@ void imprimirHerramienta(FILE * archivo)
     }
 }
 
-void prestarHerramientaArch(int idBuscado){
-        int cantidadSol,cantidadDisponible;
+void prestarHerramientaArch(int idBuscado)
+{
+    int cantidadSol,cantidadDisponible;
 
-        //solicitamos al usuario que ingrese la cantidad a prestar..
-        FILE *archivo = fopen(NOM_ARCHIVO, "rb");
-        if(fread(&obj,sizeof(obj),1,archivo)==1){
-            cantidadDisponible=obj.stock;
-            printf("Cant disp: %d \n",cantidadDisponible);
+    FILE *archivo = fopen(NOM_ARCHIVO, "rb+");//modo lectura/escritura binaria "rb+"
+    if(archivo!=NULL)
+    {
+        do//mientras el puntero tenga para leer..
+        {
+
+            if(fread(&obj.id, sizeof(obj.id), 1, archivo)==1)
+            {
+                if (obj.id == idBuscado)//coincide?
+                {
+                    printf("ID: %d\n", obj.id);//imprimimos el id leido que coincide
+
+                    if(fread(&obj.nombre,sizeof(obj.nombre),1,archivo)==1)
+                    {
+                        printf("Nombre: %s\n", obj.nombre);
+                    }
+
+                    if(fread(&obj.stock,sizeof(obj.stock),1,archivo)==1)
+                    {
+                        cantidadDisponible=obj.stock;
+                        printf("Stock: %d\n", obj.stock);
+                    }
+
+                    //fclose(archivo);
+                    //return;
+
+                    if(cantidadDisponible==0)
+                    {
+                        printf("Herramienta sin stock \n");
+                    }
+                    else
+                    {
+                        do
+                        {
+                            printf("\n Ingrese la cantidad a prestar (debe ser <= a la cantidad disponible) \n");
+                            fflush(stdin);
+                            scanf("%d",&cantidadSol);
+                        }
+                        while(cantidadDisponible<cantidadSol);
+
+                        //actualizamos la cantidad disponible, es decir, se reduce el stock
+                        obj.stock-=cantidadSol;
+
+                        fseek(archivo, -sizeof(obj.stock), SEEK_CUR);
+                        //fseek se usa para mover el puntero del archivo hacia atras
+                        //con el comando SEEK_CUR, por el tamaño de la estructura obj, de manera
+                        //que el siguiente fwrite sobrescriba el registro actual con la actualización
+                        fwrite(&obj.stock, sizeof(obj.stock), 1, archivo);
+
+                        //notificamos actualización exitosa
+                        printf("Prestamo realizado con exito.\n");
+                        printf("Nuevo stock de %s: %d\n", obj.nombre, obj.stock);
+
+                        //cerramos el archivo y finalizamos la función.
+                        fclose(archivo);
+                        return;
+
+                    }
+
+
+                }
+                else
+                {
+                    fseek(archivo,sizeof(obj.id),SEEK_CUR);
+                }
+            }
+
         }
-        //if(archivo!=NULL){}
+        while((!(feof(archivo))) && (obj.id =! idBuscado) );
+        printf("Herramienta no encontrada \n");
+        fclose(archivo);
 
-//        do{
-//            printf("Ingrese la cantidad a prestar (debe ser <= a la cantidad disponible) \n");
-//            fflush(stdin);
-//            scanf("%d",&cantidadSol);
-//        }while(cantidadDisponible<cantidadSol);
+    }
+    else
+    {
+        printf("No se pudo abrir el archivo \n");
+        return;
+    }
+
 }
+
+void resetArchivo()
+{
+    FILE *archivo = fopen(NOM_ARCHIVO, "wb");
+    if (archivo != NULL)
+    {
+        fclose(archivo);
+        printf("El archivo ha sido reseteado exitosamente.\n");
+    }
+    else
+    {
+        printf("Error al intentar resetear el archivo.\n");
+    }
+}
+
 

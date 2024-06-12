@@ -266,7 +266,7 @@ void prestarHerramientaArch(int idBuscado)
     FILE *archivo = fopen(NOM_ARCHIVO, "rb+");//modo lectura/escritura binaria "rb+"
     if(archivo!=NULL)
     {
-        do//mientras el puntero tenga para leer..
+        do
         {
 
             if(fread(&obj.id, sizeof(obj.id), 1, archivo)==1)
@@ -321,8 +321,6 @@ void prestarHerramientaArch(int idBuscado)
                         return;
 
                     }
-
-
                 }
                 else
                 {
@@ -331,7 +329,7 @@ void prestarHerramientaArch(int idBuscado)
             }
 
         }
-        while((!(feof(archivo))) && (obj.id =! idBuscado) );
+        while((!(feof(archivo))));
         printf("Herramienta no encontrada \n");
         fclose(archivo);
 

@@ -1,24 +1,27 @@
 # depslib dependency file v1.0
-1718957268 source:c:\users\54224\desktop\archivos codeblocks\pañol de herramientas\lib.c
+1719023936 source:c:\users\54224\desktop\archivos codeblocks\pañol de herramientas\lib.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	<ctype.h>
 	<math.h>
+	<time.h>
 	"lib.h"
 
-1718954660 source:c:\users\54224\desktop\archivos codeblocks\pañol de herramientas\main.c
+1719022768 source:c:\users\54224\desktop\archivos codeblocks\pañol de herramientas\main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	<ctype.h>
 	<math.h>
+	<time.h>
 	"lib.h"
 
-1718955652 c:\users\54224\desktop\archivos codeblocks\pañol de herramientas\lib.h
+1719023985 c:\users\54224\desktop\archivos codeblocks\pañol de herramientas\lib.h
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	<ctype.h>
 	<math.h>
+	<time.h>
 

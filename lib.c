@@ -35,6 +35,8 @@ void printMenu()
         printf("\n 2) Buscar herramienta \n");
         printf("\n 3) Lista de todas las herramientas \n");
         printf("\n 4) Resetear (Vaciamiento) lista \n");
+        printf("\n 5) Historial de prestamos de la jornada \n");
+        printf("\n 6) Historial de prestamos semanal \n");
         fflush(stdin);
         scanf("%d",&op);
         system("cls");
@@ -74,6 +76,14 @@ void printMenu()
             case 4:
                 resetArchivo();
                 break;
+
+            case 5:
+                historial_prestamos_jornada();
+                break;
+
+            case 6:
+
+                break;
             }
         }
         i++;
@@ -84,7 +94,7 @@ void printMenu()
 }
 
 //funcion que sirve para diversas validaciones a lo largo del proyecto
-//ingresas la variable entera por parámetro y básicamente te dice cuantos dígitos tiene
+//ingresas la variable entera por parï¿½metro y bï¿½sicamente te dice cuantos dï¿½gitos tiene
 int longitud_de_entero(int entero)
 {
     if(entero==0)
@@ -108,7 +118,7 @@ void cargarHerramientaArch()
     //validamos que el formato de id sea respetado forzosamente por el usuario
     system("cls");
 
-    if(existeId(idInput)==0)//si el id no está registrado, procedemos
+    if(existeId(idInput)==0)//si el id no estï¿½ registrado, procedemos
     {
         herramienta obj;
         FILE * archivo;
@@ -117,11 +127,11 @@ void cargarHerramientaArch()
         {
             obj.id = idInput;//usamos obj.id para guardar el idInput
 
-            //levantamos los demás datos solicitandolos por pantalla
+            //levantamos los demï¿½s datos solicitandolos por pantalla
             printf("Ingrese el nombre de herramienta \n");
             fflush(stdin);
             gets(obj.nombre);
-            // Convertimos el nombre a mayúsculas
+            // Convertimos el nombre a mayï¿½sculas
             for (int i = 0; obj.nombre[i]; i++)
             {
                 obj.nombre[i] = toupper(obj.nombre[i]);
@@ -228,6 +238,7 @@ void buscarHerramientaArch(int idBuscado)
                         printf("1) Actualizar stock \n");
                         mensaje_peligro("2) Eliminar herramienta \n");
                         printf("3) Prestar \n");
+
                         fflush(stdin);
                         scanf("%d",&opc);
                         system("cls");
@@ -236,11 +247,11 @@ void buscarHerramientaArch(int idBuscado)
                             switch(opc)
                             {
                             case 1:
-                                //implementar procedimiento de modificación de stock..
+                                //implementar procedimiento de modificaciï¿½n de stock..
                                 modificar_stock(idBuscado);
                                 break;
                             case 2:
-                                //implementamos procedimiento de eliminación de la herramienta
+                                //implementamos procedimiento de eliminaciï¿½n de la herramienta
                                 eliminar_herramienta(idBuscado);
                                 break;
                             case 3:
@@ -467,14 +478,12 @@ void eliminar_herramienta(int id)
     {
         printf("Se cancelo la operacion. \n");
     }
-
-
 }
 
 void mensaje_exito(const char* mensaje)
 {
     // Secuencia de escape para color verde
-    printf("\033[1;32m"); // \033 es el carácter de escape, [1;32m es el código ANSI para texto verde brillante
+    printf("\033[1;32m"); // \033 es el carï¿½cter de escape, [1;32m es el cï¿½digo ANSI para texto verde brillante
     printf(mensaje);
     printf("\033[0m"); // Restablecer el color
 }
@@ -506,7 +515,7 @@ void registrarPrestamo(int herramientaID)
     int cantidad_input,id_P;
     id_P=0;
     FILE *Parchivo = fopen(PRESTAMOS, "ab");
-    FILE *inventario = fopen(NOM_ARCHIVO, "rb");
+    FILE *inventario = fopen(NOM_ARCHIVO, "rb+");
     if(Parchivo)
     {
         if(inventario!=NULL)
@@ -532,17 +541,23 @@ void registrarPrestamo(int herramientaID)
                             p.herramientaID = herramientaID;
                             obtenerFechaActual(p.fechaGeneracion);
                             obtenerHoraActual(p.horaPrestamo);
-                            strcpy(p.horaDevolucion, ""); // Vacío inicialmente
+                            strcpy(p.horaDevolucion, ""); // Vacï¿½o inicialmente
                             strcpy(p.horaInicioJornada, horaInicioJornada);
                             strcpy(p.horaFinJornada, horaFinJornada);
                             p.cantidad=cantidad_input;
                             fwrite(&p, sizeof(p), 1, Parchivo);
+                            obj.stock -= cantidad_input;
+                            fseek(inventario, -sizeof(obj), SEEK_CUR); // Mover puntero hacia atrÃ¡s
+                            fwrite(&obj, sizeof(obj), 1, inventario); // Reescribir posiciÃ³n con datos actualizados
                             mensaje_exito("Prestamo registrado con exito!\n");
                             system("pause");
                             id_P=p.prestamoID;
                             fclose(Parchivo);
+                            fclose(inventario);
 
                             imprimirPrestamo(id_P,herramientaID);
+                            break;
+
 
                         }
                         else
@@ -567,14 +582,14 @@ void registrarPrestamo(int herramientaID)
 
 }
 
-// Función para generar un nuevo ID de préstamo
+// Funciï¿½n para generar un nuevo ID de prï¿½stamo
 int generarNuevoIDPrestamo()
 {
     static int idActual = 0;
     return ++idActual;
 }
 
-// Función para obtener la fecha actual
+// Funciï¿½n para obtener la fecha actual
 void obtenerFechaActual(char *fecha) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
@@ -585,10 +600,10 @@ void obtenerFechaActual(char *fecha) {
     } else {
         sprintf(fecha, "%02d-%02d-%04d", tm->tm_mday, tm->tm_mon + 1, tm->tm_year + 1900);
     }
-    //printf("Fecha obtenida: %s\n", fecha);  // Depuración
+    //printf("Fecha obtenida: %s\n", fecha);  // Depuraciï¿½n
 }
 
-// Función para obtener la hora actual
+// Funciï¿½n para obtener la hora actual
 void obtenerHoraActual(char *hora) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
@@ -599,10 +614,10 @@ void obtenerHoraActual(char *hora) {
     } else {
         sprintf(hora, "%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
     }
-    //printf("Hora obtenida: %s\n", hora);  // Depuración
+    //printf("Hora obtenida: %s\n", hora);  // Depuraciï¿½n
 }
 
-//Función para configurar el horario de inicio y fin de la jornada laboral
+//Funciï¿½n para configurar el horario de inicio y fin de la jornada laboral
 void configurar_jornada(const char *horaInicioJornada, const char *horaFinJornada)
 {
     printf("Ingrese la hora de inicio de la jornada (hh:mm) (FORMATO 24 HS):\n");
@@ -656,6 +671,58 @@ void imprimirPrestamo(int id_prestamo,int herramientaID){
     }
 }
 
+void historial_prestamos_jornada() {
+    prestamo p;
+    FILE *Parchivo = fopen(PRESTAMOS, "rb");
+    char fechaActual[11];
+    obtenerFechaActual(fechaActual);
 
+    if (Parchivo!= NULL) {
+        printf("Historial de prÃ©stamos de la jornada:\n");
+        while (!feof(Parchivo)) {
+            if (fread(&p, sizeof(p), 1, Parchivo) == 1) {
+                if (strcmp(p.fechaGeneracion, fechaActual) == 0) {
+                    // Imprimir informaciÃ³n del prÃ©stamo
+                    printf("ID Prestamo: %d\n", p.prestamoID);
+                    printf("Herramienta solicitada: %s\n", obtenerNombreHerramienta(p.herramientaID));
+                    printf("Cantidad prestada: %d\n", p.cantidad);
+                    printf("Fecha de prestamo: %s\n", p.fechaGeneracion);
+                    printf("Hora de prestamo: %s\n", p.horaPrestamo);
+                    printf("Inicio jornada: %s\n", p.horaInicioJornada);
+                    printf("Fin jornada: %s\n", p.horaFinJornada);
+                    if (strcmp(p.horaDevolucion, "") == 0) {
+                        printf("Hora de devoluciÃ³n: PENDIENTE\n");
+                    } else {
+                        printf("Hora de devoluciÃ³n: %s\n", p.horaDevolucion);
+                    }
+                    printf("\n");
+                }
+            }
+        }
+        fclose(Parchivo);
+    } else {
+        error_msj_apertura_archivo();
+    }
+}
+
+char* obtenerNombreHerramienta(int herramientaID) {
+    FILE *Harchivo = fopen(NOM_ARCHIVO, "rb");
+    herramienta h;
+    char* nombreHerramienta = NULL;
+
+    if (Harchivo!= NULL) {
+        while (fread(&h, sizeof(h), 1, Harchivo) == 1) {
+            if (h.id == herramientaID) {
+                nombreHerramienta = strdup(h.nombre);
+                break;
+            }
+        }
+        fclose(Harchivo);
+    } else {
+        error_msj_apertura_archivo();
+    }
+
+    return nombreHerramienta;
+}
 
 

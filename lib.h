@@ -13,11 +13,11 @@ typedef struct herramientas{
 }herramienta;
 
 typedef struct prestamos{
-    int prestamoID;             // ID único del préstamo
+    int prestamoID;             // ID ï¿½nico del prï¿½stamo
     int herramientaID;          // ID de la herramienta prestada
-    char fechaGeneracion[11];   // Fecha en que se genera el préstamo (dd-mm-yyyy)
-    char horaPrestamo[6];       // Hora del préstamo (hh:mm)
-    char horaDevolucion[6];     // Hora de devolución (hh:mm), vacía si no se ha devuelto
+    char fechaGeneracion[11];   // Fecha en que se genera el prï¿½stamo (dd-mm-yyyy)
+    char horaPrestamo[6];       // Hora del prï¿½stamo (hh:mm)
+    char horaDevolucion[6];     // Hora de devoluciï¿½n (hh:mm), vacï¿½a si no se ha devuelto
     char horaInicioJornada[6];  // Hora de inicio de la jornada laboral (hh:mm)
     char horaFinJornada[6];     // Hora de fin de la jornada laboral (hh:mm)
     int cantidad; //cantidad entregada
@@ -47,5 +47,7 @@ void obtenerFechaActual(char *fecha);
 void obtenerHoraActual(char *hora);
 void imprimirPrestamo(int id_prestamo,int herramientaID);
 void crear_prestamos();
+void historial_prestamos_jornada();
+char* obtenerNombreHerramienta(int herramientaID);
 
 #endif // LIB_H_INCLUDED

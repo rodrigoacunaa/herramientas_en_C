@@ -4,12 +4,14 @@
 #include <ctype.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 #include "lib.h"
 #define MAX_ITEMS 50
 #define MAX_CHAR 20
 #define MAX_STOCK 100
 #define NOM_ARCHIVO "herramientas.dat"
 #define PRESTAMOS "prestamos.dat"
+#define PRESTAMOS_IDS "prestamos_ids.dat"
 
 herramienta obj;
 char horaInicioJornada[6];
@@ -18,15 +20,11 @@ char horaFinJornada[6];
 void printMenu()
 {
     int op,salir,i,id,idBuscado;
+    char nombre_archivo[20];
+    char nombre_archivo2[20];
     salir=1;
     i=0;
-    printf("---------------------\n Bienvenido Usuario! \n---------------------\n");
 
-    while(strcmp(horaInicioJornada,"")==0 || strcmp(horaFinJornada,"")==0){
-        configurar_jornada(horaInicioJornada,horaFinJornada);
-    }
-    printf("INICIO JORNADA: %s\n",horaInicioJornada);
-    printf("FIN JORNADA: %s\n",horaFinJornada);
     do
     {
         printf("Elige tu operacion (SOLO OPCIONES VALIDAS) \n");
@@ -37,6 +35,7 @@ void printMenu()
         printf("\n 4) Resetear (Vaciamiento) lista \n");
         printf("\n 5) Historial de prestamos de la jornada \n");
         printf("\n 6) Historial de prestamos semanal \n");
+        printf("\n 7) Gestionar usuarios \n");
         fflush(stdin);
         scanf("%d",&op);
         system("cls");
@@ -71,10 +70,38 @@ void printMenu()
             case 3:
                 listarHerramientasArch();
                 system("pause");
+                system("cls");
                 break;
 
             case 4:
-                resetArchivo();
+                        do{
+                        printf("Que tabla desea vaciar? (SOLO OPCIONES VALIDAS)\n");
+                        printf("1) TABLA DE INVENTARIO\n");
+                        printf("2) TABLA DE PRESTAMOS\n");
+                        fflush(stdin);
+                        scanf("%d",&op);
+                        if(op==1 || op==2){
+                            switch (op)
+                            {
+                            case 1:
+                                    strcpy(nombre_archivo,NOM_ARCHIVO);
+
+                                break;
+
+                            case 2:
+                                    strcpy(nombre_archivo,PRESTAMOS);
+
+                                    strcpy(nombre_archivo2,PRESTAMOS_IDS);
+                                break;
+
+                            default:
+                                break;
+                            }
+                        }
+                             }while(op<1 || op>2);
+                             resetArchivo(nombre_archivo);
+                             resetArchivo(nombre_archivo2);
+
                 break;
 
             case 5:
@@ -84,13 +111,16 @@ void printMenu()
             case 6:
 
                 break;
+
+            case 7:
+                 print_sub_menu_usuarios();
+
+                break;
             }
         }
         i++;
     }
     while(op<1 || op>5 || salir==1);
-
-
 }
 
 //funcion que sirve para diversas validaciones a lo largo del proyecto
@@ -165,10 +195,6 @@ void cargarHerramientaArch()
         mensaje_advertencia("ID ya registrado");
         printf("\n");
     }
-
-
-
-
 }
 
 void listarHerramientasArch()
@@ -343,9 +369,9 @@ void imprimirHerramienta(FILE * archivo)
 
 
 
-void resetArchivo()
+void resetArchivo(char *file_name)
 {
-    FILE *archivo = fopen(NOM_ARCHIVO, "wb");
+    FILE *archivo = fopen(file_name, "wb");
     if (archivo != NULL)
     {
         fclose(archivo);
@@ -527,45 +553,59 @@ void registrarPrestamo(int herramientaID)
                 {
                     if (obj.id == herramientaID)//coincide?
                     {
-                        do
-                        {
-                            printf("Cantidad a prestar (SOLO VALORES VALIDOS): \n");
+                        do{
+                            printf("DNI de operario solicitante (FORMATO ACEPTADO: DNI DE ALMENOS 8 ENTEROS)\n");
                             fflush(stdin);
-                            scanf("%d",&cantidad_input);
+                            scanf("%d",&p.dni_operario);
+                        }while(longitud_de_entero(p.dni_operario)<8);
+                        if(buscar_operario(p.dni_operario)==0){
+                            printf("El operario '%d' no existe, vuelva a intentar\n ",p.dni_operario);
+                            mostrar_mensaje_intermitente("Volviendo..",1);
+                            buscarHerramientaArch(p.dni_operario);
+                        }else{
+                                    do
+                                    {
+                                        printf("Cantidad a prestar (SOLO VALORES VALIDOS): \n");
+                                        fflush(stdin);
+                                        scanf("%d",&cantidad_input);
+                                    }
+                                    while(cantidad_input<0);
+
+                                    if(obj.stock>=cantidad_input)
+                                    {
+                                        p.prestamoID = generarNuevoIDPrestamo();
+                                        p.herramientaID = herramientaID;
+                                        obtenerFechaActual(p.fechaGeneracion);
+                                        obtenerHoraActual(p.horaPrestamo);
+                                        strcpy(p.horaDevolucion, ""); // Vacio inicialmente
+                                        strcpy(p.horaInicioJornada, horaInicioJornada);
+                                        strcpy(p.horaFinJornada, horaFinJornada);
+                                        p.cantidad=cantidad_input;
+                                        fwrite(&p, sizeof(p), 1, Parchivo);
+                                        obj.stock -= cantidad_input;
+                                        fseek(inventario, -sizeof(obj), SEEK_CUR); // Mover puntero hacia atrás
+                                        fwrite(&obj, sizeof(obj), 1, inventario); // Reescribir posición con datos actualizados
+                                        mensaje_exito("Prestamo registrado con exito!\n");
+                                        system("pause");
+                                        id_P=p.prestamoID;
+                                        fclose(Parchivo);
+                                        fclose(inventario);
+
+                                        imprimirPrestamo(id_P,herramientaID);
+                                        break;
+
+
+                                    }
+                                    else
+                                    {
+                                        mensaje_advertencia("La cantidad supera el stock disponible! \n");
+                                        printf("Herramienta: %s \n",obj.nombre);
+                                        printf("Cantidad disponible: %d \n",obj.stock);
+                                    }
                         }
-                        while(cantidad_input<0);
-
-                        if(obj.stock>=cantidad_input)
-                        {
-                            p.prestamoID = generarNuevoIDPrestamo();
-                            p.herramientaID = herramientaID;
-                            obtenerFechaActual(p.fechaGeneracion);
-                            obtenerHoraActual(p.horaPrestamo);
-                            strcpy(p.horaDevolucion, ""); // Vac�o inicialmente
-                            strcpy(p.horaInicioJornada, horaInicioJornada);
-                            strcpy(p.horaFinJornada, horaFinJornada);
-                            p.cantidad=cantidad_input;
-                            fwrite(&p, sizeof(p), 1, Parchivo);
-                            obj.stock -= cantidad_input;
-                            fseek(inventario, -sizeof(obj), SEEK_CUR); // Mover puntero hacia atrás
-                            fwrite(&obj, sizeof(obj), 1, inventario); // Reescribir posición con datos actualizados
-                            mensaje_exito("Prestamo registrado con exito!\n");
-                            system("pause");
-                            id_P=p.prestamoID;
-                            fclose(Parchivo);
-                            fclose(inventario);
-
-                            imprimirPrestamo(id_P,herramientaID);
-                            break;
 
 
-                        }
-                        else
-                        {
-                            mensaje_advertencia("La cantidad supera el stock disponible! \n");
-                            printf("Herramienta: %s \n",obj.nombre);
-                            printf("Cantidad disponible: %d \n",obj.stock);
-                        }
+
 
                     }
                 }
@@ -577,16 +617,31 @@ void registrarPrestamo(int herramientaID)
     {
         mensaje_peligro("Error al abrir el archivo de prestamos.\n");
     }
-
-
-
 }
 
 // Funci�n para generar un nuevo ID de pr�stamo
 int generarNuevoIDPrestamo()
 {
-    static int idActual = 0;
-    return ++idActual;
+    if(archivo_vacio(PRESTAMOS_IDS)==1){
+        FILE * apuntador = fopen(PRESTAMOS_IDS,"rb+");
+        static int id;
+        if(apuntador){
+
+        if(fread(&id,sizeof(id),1,apuntador)==0){
+            id++;
+        }else{
+            id=1;
+        }
+
+    }else{
+        mensaje_peligro("Error al abrir el archivo\n");
+    }
+    fclose(apuntador);
+    return id;
+    }else{
+        printf("El archivo debe ser creado\n");
+        crear_binario(PRESTAMOS_IDS);
+    }
 }
 
 // Funci�n para obtener la fecha actual
@@ -631,13 +686,14 @@ void configurar_jornada(const char *horaInicioJornada, const char *horaFinJornad
 void imprimirPrestamo(int id_prestamo,int herramientaID){
     prestamo p;
     herramienta obj;
+    usuario user;
     FILE *Parchivo = fopen(PRESTAMOS,"rb");
     FILE *inventario = fopen(NOM_ARCHIVO,"rb");
     if(Parchivo!=NULL && inventario!=NULL){
         while(!feof(Parchivo)){
             if(fread(&p, sizeof(p), 1, Parchivo)==1){
                     if(p.prestamoID==id_prestamo){
-                    while(!feof(inventario)){
+                                while(!feof(inventario)){
                             if(fread(&obj,sizeof(obj),1,inventario)==1){
                                     if(obj.id==herramientaID){
                                     mensaje_info("-------------------------------\n");
@@ -656,9 +712,30 @@ void imprimirPrestamo(int id_prestamo,int herramientaID){
                                         printf("Hora de devolucion: %s\n",p.horaDevolucion);
                                     }
                                     mensaje_info("-------------------------------\n");
+                                    printf("\n");
+                                    printf("Datos del operario solicitante:\n");
+                                    mensaje_exito("-------------------------------\n");
+                                    FILE * u = fopen("usuarios.dat","rb");
+                                    if(u){
+                                                while(!feof(u)){
+                                        if(fread(&user,sizeof(usuario),1,u)==1){
+                                            if(user.dni==p.dni_operario && user.tipo==2){
+                                                printf("DNI: '%d' \n",user.dni);
+                                                printf("NOMBRE: ");
+                                                mensaje_info(printf("%s\n",user.nombre));
+                                            }
+                                        }
+
+                                    }
+                                    }
+                                    fclose(u);
+                                    mensaje_exito("-------------------------------\n");
+
                                 }
                             }
                     }
+
+
                 }
             }
 
@@ -673,17 +750,21 @@ void imprimirPrestamo(int id_prestamo,int herramientaID){
 
 void historial_prestamos_jornada() {
     prestamo p;
+    usuario user;
     FILE *Parchivo = fopen(PRESTAMOS, "rb");
     char fechaActual[11];
     obtenerFechaActual(fechaActual);
 
     if (Parchivo!= NULL) {
-        printf("Historial de préstamos de la jornada:\n");
+        mensaje_info("Historial de prestamos de la jornada:\n");
+        mensaje_info("--------------------------------------------\n");
         while (!feof(Parchivo)) {
             if (fread(&p, sizeof(p), 1, Parchivo) == 1) {
                 if (strcmp(p.fechaGeneracion, fechaActual) == 0) {
                     // Imprimir información del préstamo
+                    mensaje_exito("------------------------------------\n");
                     printf("ID Prestamo: %d\n", p.prestamoID);
+                    printf("DNI OPERARIO: %d\n",p.dni_operario);
                     printf("Herramienta solicitada: %s\n", obtenerNombreHerramienta(p.herramientaID));
                     printf("Cantidad prestada: %d\n", p.cantidad);
                     printf("Fecha de prestamo: %s\n", p.fechaGeneracion);
@@ -691,15 +772,36 @@ void historial_prestamos_jornada() {
                     printf("Inicio jornada: %s\n", p.horaInicioJornada);
                     printf("Fin jornada: %s\n", p.horaFinJornada);
                     if (strcmp(p.horaDevolucion, "") == 0) {
-                        printf("Hora de devolución: PENDIENTE\n");
+                        printf("Hora de devolucion: PENDIENTE\n");
                     } else {
                         printf("Hora de devolución: %s\n", p.horaDevolucion);
                     }
+                    mensaje_exito("------------------------------------\n");
                     printf("\n");
+                        mensaje_exito("-------------------------------\n");
+                                    FILE * u = fopen("usuarios.dat","rb");
+                                    if(u){
+                                        while(!feof(u)){
+                                        if(fread(&user,sizeof(user),1,u)==1){
+                                            //printf("DNI: '%d' \n",user.dni);
+                                            if(user.dni==p.dni_operario && user.tipo==2){
+                                                printf("DNI: '%d' \n",p.dni_operario);
+                                                printf("NOMBRE: ");
+                                                mensaje_info(printf("%s\n",user.nombre));
+                                            }
+                                        }
+
+                                    }
+                                    }else{
+                                        printf("ERROR: %s\n",strerror(errno));
+                                    }
+                                    fclose(u);
+                        mensaje_exito("-------------------------------\n");
                 }
             }
         }
         fclose(Parchivo);
+        mensaje_info("--------------------------------------------\n");
     } else {
         error_msj_apertura_archivo();
     }
@@ -725,4 +827,177 @@ char* obtenerNombreHerramienta(int herramientaID) {
     return nombreHerramienta;
 }
 
+int archivo_vacio(char *nombre_archivo)
+{
+    FILE *archivo = fopen(nombre_archivo, "rb");
+    if (archivo == NULL)
+    {
+        perror("No se pudo abrir el archivo");
+        return 1; // Consideramos vacío si no se puede abrir
+    }
 
+    fseek(archivo, 0, SEEK_END);
+    long size = ftell(archivo);
+    fclose(archivo);
+
+    return size == 0; // Retorna 1 si el archivo está vacío, 0 si no lo está
+}
+
+void crear_binario(char *nombre_binario)
+{
+    FILE *archivo = fopen(nombre_binario, "ab");
+    if(archivo == NULL)
+    {
+        printf("No se pudo crear el archivo\n");
+    }
+    else
+    {
+        printf("Se creo el archivo correctamente\n");
+    }
+    fclose(archivo);
+}
+
+
+void cargar_usuario() {
+    usuario nuevo_usuario;
+
+    // Pedir datos al usuario
+    printf("Ingrese su DNI: ");
+    scanf("%d", &nuevo_usuario.dni);
+
+    printf("Ingrese su tipo de usuario (1)Administrador, (2)Operario: ");
+    scanf("%d", &nuevo_usuario.tipo);
+
+    printf("Ingrese su nombre: ");
+    scanf("%49s", nuevo_usuario.nombre); // Leave space for null terminator
+
+    printf("Ingrese su password: ");
+    scanf("%49s", nuevo_usuario.password); // Leave space for null terminator
+
+    // Abrir archivo en modo append (añadir al final)
+    FILE *fp = fopen("usuarios.dat", "ab");
+    if (fp == NULL) {
+        printf("Error al abrir el archivo\n");
+        return;
+    }
+
+    // Escribir estructura en el archivo
+    fwrite(&nuevo_usuario, sizeof(usuario), 1, fp);
+
+    // Cerrar archivo
+    fclose(fp);
+
+    printf("Usuario cargado exitosamente\n");
+}
+
+void print_sub_menu_usuarios(){
+    int op;
+    do{
+        printf("\n 0) Volver \n");
+        printf("\n 1) Agregar usuario\n");
+        printf("\n 2) Eliminar usuario \n");
+        printf("\n 3) Modificar permisos de usuario \n");
+        fflush(stdin);
+        scanf("%d",&op);
+        system("cls");
+        if(op!=0){
+            switch (op)
+            {
+            case 1:
+                cargar_usuario();
+                break;
+            case 2:
+
+                break;
+            case 3:
+                break;
+
+            default:
+                break;
+            }
+        }
+    }while(op!=0);
+}
+
+
+int login() {
+    int dni, tipo;
+    char nombre[MAX_CHAR], password[MAX_CHAR];
+
+    printf("BIENVENIDO AL SISTEMA DE GESTION DE HERRAMIENTAS\n");
+    mensaje_advertencia("Para continuar inicie sesion como administrador\n");
+
+    printf("Ingrese su DNI: ");
+    scanf("%d", &dni);
+    tipo=1; //administrador
+
+    printf("Ingrese su nombre: ");
+    scanf("%49s", nombre); // Leave space for null terminator
+
+    printf("Ingrese su password: ");
+    scanf("%49s", password); // Leave space for null terminator
+
+    // Abrir archivo de usuarios en modo lectura
+    FILE *fp = fopen("usuarios.dat", "rb");
+    if (fp == NULL) {
+        error_msj_apertura_archivo();
+        return 0;
+    }
+
+    usuario usuario_logueado;
+    int encontrado = 0;
+
+    // Leer archivo de usuarios y buscar coincidencia
+    while (fread(&usuario_logueado, sizeof(usuario), 1, fp) == 1) {
+        if (usuario_logueado.dni == dni && usuario_logueado.tipo == tipo  && strcmp(usuario_logueado.password, password) == 0) {
+            encontrado = 1;
+            break;
+        }
+    }
+
+    fclose(fp);
+
+    if (encontrado) {
+        mensaje_exito("Login exitoso!\n");
+        if (tipo == 1) {
+            // Iniciar sesión como administrador
+            printf("Bienvenido, %s!\n",nombre);
+            mostrar_mensaje_intermitente("Redirigiendo a vista de admin..\n",1);
+            system("pause");
+            system("cls");
+            // Mostrar menú de administrador
+            printMenu();
+            return 1;
+        }
+    } else {
+        mensaje_advertencia("Credenciales incorrectas. Intente nuevamente.\n");
+        sleep(2);
+        login();
+    }
+}
+
+void mostrar_mensaje_intermitente(const char *mensaje, int duracion) {
+    int i;
+    for (i = 0; i < duracion; i++) {
+        printf("%s\r", mensaje);
+        fflush(stdout);
+        usleep(1000000); // Retraso de 0.1 segundos
+    }
+    printf("\n");
+}
+
+int buscar_operario(int dni){
+    usuario operario;
+    FILE *op = fopen("usuarios.dat","rb");
+    if(op){
+        if(fread(&operario,sizeof(usuario),1,op)==1){
+            while(!feof(op)){
+                if(operario.dni==dni){
+                    fclose(op);
+                    return 1; //operario existe
+                }
+            }
+        }
+        return 0; //operario no existe
+    }
+}

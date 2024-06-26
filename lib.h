@@ -62,6 +62,7 @@ void cargar_usuario();
 void print_sub_menu_usuarios();
 int login();
 int buscar_operario(int dni);
-void temporizador(char *hora_inicio, char *hora_fin)
+void temporizador(char *hora_inicio, char *hora_fin);
+void eliminar_usuario();
 
 #endif // LIB_H_INCLUDED

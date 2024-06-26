@@ -149,7 +149,7 @@ void cargarHerramientaArch()
     //validamos que el formato de id sea respetado forzosamente por el usuario
     system("cls");
 
-    if(existeId(idInput)==0)//si el id no est� registrado, procedemos
+    if(existeId(idInput,NOM_ARCHIVO)==0)//si el id no est� registrado, procedemos
     {
         herramienta obj;
         FILE * archivo;
@@ -324,9 +324,9 @@ int num_items_reg()
 
 
 //busca un id en la tabla herramientas, devuelve 1 si lo encuentra, devuelve 0 si no.
-int existeId(idInput)
+int existeId(int idInput, char *FILE_NAME)
 {
-    FILE * archivo = fopen(NOM_ARCHIVO,"rb");
+    FILE * archivo = fopen(FILE_NAME,"rb");
     if(archivo!=NULL)
     {
         while (!feof(archivo)) //mientras el puntero tenga para leer..
@@ -334,6 +334,33 @@ int existeId(idInput)
             if(fread(&obj, sizeof(obj), 1, archivo)==1)
             {
                 if (obj.id==idInput)
+                {
+                    fclose(archivo);
+                    return 1;//ID encontrado
+                }
+            }
+        }
+        fclose(archivo);
+    }
+    else
+    {
+        error_msj_apertura_archivo();
+    }
+    return 0;//ID no encontrado
+
+}
+
+int existe_dni(int idInput, char *FILE_NAME)
+{
+    usuario user;
+    FILE * archivo = fopen(FILE_NAME,"rb");
+    if(archivo!=NULL)
+    {
+        while (!feof(archivo)) //mientras el puntero tenga para leer..
+        {
+            if(fread(&user, sizeof(user), 1, archivo)==1)
+            {
+                if (user.dni==idInput)
                 {
                     fclose(archivo);
                     return 1;//ID encontrado
@@ -605,7 +632,7 @@ void registrarPrestamo(int herramientaID)
                                         printf("Herramienta: %s \n",obj.nombre);
                                         printf("Cantidad disponible: %d \n",obj.stock);
                                         buscarHerramientaArch(herramientaID);
-                                        
+
                                     }
                         }
 
@@ -720,21 +747,22 @@ void configurar_jornada(const char *horaInicioJornada, const char *horaFinJornad
         return 0;
     }else{
         //si el formato es correcto
-        
+
         //si el 'periodos_jornadas' no está vacío...
         if(archivo_vacio("periodos_jornadas.dat")==1){
                 FILE *fp = fopen("periodos_jornadas.dat","ab+");
             if(fp){
-                    
+
             }else{
                 error_msj_apertura_archivo();
             }
         }else{
-            
+
         }
-        
+
     }
 }
+
 void imprimirPrestamo(int id_prestamo,int herramientaID){
     prestamo p;
     herramienta obj;
@@ -918,33 +946,126 @@ void cargar_usuario() {
     printf("Ingrese su DNI: ");
     scanf("%d", &nuevo_usuario.dni);
 
-    printf("Ingrese su tipo de usuario (1)Administrador, (2)Operario: ");
-    scanf("%d", &nuevo_usuario.tipo);
+    if(existe_dni(nuevo_usuario.dni,"usuarios.dat")==0){
+        printf("Ingrese su tipo de usuario (1)Administrador, (2)Operario: ");
+        scanf("%d", &nuevo_usuario.tipo);
 
-    printf("Ingrese su nombre: ");
-    scanf("%49s", nuevo_usuario.nombre); // Leave space for null terminator
+        printf("Ingrese su nombre: ");
+        scanf("%49s", nuevo_usuario.nombre); 
+        if(nuevo_usuario.tipo==1){
+            printf("Ingrese su password: ");
+            scanf("%49s", nuevo_usuario.password);
+        }else{
+            //si es operario no tiene clave
+            strcpy(nuevo_usuario.password,"");
+        }
 
-    printf("Ingrese su password: ");
-    scanf("%49s", nuevo_usuario.password); // Leave space for null terminator
+         
+            // Abrir archivo en modo append (añadir al final)
+        FILE *fp = fopen("usuarios.dat", "ab");
+        if (fp == NULL) {
+            printf("Error al abrir el archivo\n");
+            return;
+        }
 
-    // Abrir archivo en modo append (añadir al final)
-    FILE *fp = fopen("usuarios.dat", "ab");
-    if (fp == NULL) {
-        printf("Error al abrir el archivo\n");
+        // Escribir estructura en el archivo
+        fwrite(&nuevo_usuario, sizeof(usuario), 1, fp);
+
+        // Cerrar archivo
+        fclose(fp);
+
+        mensaje_exito("Usuario cargado exitosamente");
+        printf("\n");
+            sleep(2);
+            system("cls");
+            print_sub_menu_usuarios();
+        }else{
+            mensaje_peligro("Dni ya registrado, vuelva a intentar.\n");
+            system("pause");
+            system("cls");
+            print_sub_menu_usuarios();
+
+        }
+
+
+}
+
+void eliminar_usuario() {
+    usuario usuario_a_eliminar;
+    FILE *fp = fopen("usuarios.dat","rb");
+    FILE *temp = fopen("temp_users.dat","wb");
+    int dni, coincidencia_pwd, tipo, encontrado = 0;
+    coincidencia_pwd=0;
+
+    if (fp == NULL || temp == NULL) {
+        error_msj_apertura_archivo();
         return;
     }
 
-    // Escribir estructura en el archivo
-    fwrite(&nuevo_usuario, sizeof(usuario), 1, fp);
+    printf("Ingrese el DNI del usuario a eliminar: ");
+    scanf("%d", &dni);
 
-    // Cerrar archivo
+    if(existe_dni(dni,"usuarios.dat")==1) {
+        printf("Ingrese el tipo de usuario a eliminar (1)Administrador, (2)Operario: ");
+        scanf("%d", &tipo);
+
+        //si es administrador, solicitamos su clave para eliminarlo
+        if (tipo == 1) {
+            char password[MAX_CHAR];
+            printf("Ingrese su password: \n");
+            scanf("%s", password);
+            while(!feof(fp)){
+                if(fread(&usuario_a_eliminar,sizeof(usuario_a_eliminar),1,fp)==1){
+                    if(strcmp(usuario_a_eliminar.password,password)==0 && usuario_a_eliminar.dni==dni){
+                            while(!feof(fp))
+                            {
+                                if(fread(&usuario_a_eliminar,sizeof(usuario),1,fp)==1){
+                                    if(usuario_a_eliminar.dni!=dni)
+                                    {
+                                        fwrite(&usuario_a_eliminar,sizeof(usuario),1,temp);
+                                    }
+                                }
+                            }
+                            encontrado=1;
+                            coincidencia_pwd=1;
+
+                    }
+                }
+            }
+            if(!coincidencia_pwd){
+                mensaje_peligro("Password incorrecto\n");
+            }
+            
+        } else {
+                //leemos el archivo 'original'
+                while(!feof(fp))
+                {
+                    if(fread(&usuario_a_eliminar,sizeof(usuario),1,fp)==1){
+                        if(usuario_a_eliminar.dni!=dni)
+                        {
+                            fwrite(&usuario_a_eliminar,sizeof(usuario),1,temp);
+                        }
+                    }
+                }
+                encontrado=1;
+        }
+    } else {
+        printf("Usuario no encontrado\n");
+    }
+
     fclose(fp);
+    fclose(temp);
 
-    printf("Usuario cargado exitosamente\n");
+    if (encontrado) {
+        remove("usuarios.dat");
+        rename("temp_users.dat", "usuarios.dat");
+        mensaje_exito("Usuario eliminado con exito!");
+        printf("\n");
+    }
 }
 
 void print_sub_menu_usuarios(){
-    int op;
+    int op,tipo_elegido;
     do{
         printf("\n 0) Volver \n");
         printf("\n 1) Agregar usuario\n");
@@ -960,10 +1081,13 @@ void print_sub_menu_usuarios(){
                 cargar_usuario();
                 break;
             case 2:
-
+                eliminar_usuario();
                 break;
             case 3:
-            imprimir_usuarios();
+            printf("Seleccione el tipo de usuario a listar: ( 1)Administrador , 2) Operario )\n");
+            fflush(stdin);
+            scanf("%d",&tipo_elegido);
+            imprimir_usuarios(tipo_elegido);
                 break;
 
             default:
@@ -1064,16 +1188,29 @@ void imprimir_usuarios(int tipo_usuario){
     usuario user;
     FILE *fp = fopen("usuarios.dat","rb");
     if(fp){
+        if(tipo_usuario==1){
+            mensaje_advertencia("ADMINISTADORES\n");
+        }else{
+            mensaje_advertencia("OPERARIOS\n");
+        }
+        mensaje_info("----------------");
+        printf("\n");
         while(!feof(fp)){
             if(fread(&user, sizeof(user),1,fp)==1){
-                if(user.tipo==2){
+                if(user.tipo==tipo_usuario){
+                    mensaje_exito("---------------");
+                    printf("\n");
                     printf("DNI: %d\n",user.dni);
                     printf("NOMBRE: %s\n",user.nombre);
+                    mensaje_exito("---------------");
+                    printf("\n");
                 }
             }
         }
+        mensaje_info("----------------");
     }
-}   
+    fclose(fp);
+}
 
 
 
@@ -1138,3 +1275,6 @@ void temporizador(char *hora_inicio, char *hora_fin) {
     free(tm_inicio);
     free(tm_fin);
 }
+
+
+

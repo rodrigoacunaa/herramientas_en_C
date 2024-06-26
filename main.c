@@ -11,9 +11,11 @@
 
 int main()
 {
-    if(login()==1){
-        printMenu();
+    printMenu();
 
-    }
+    // if(login()==1){
+    //     printMenu();
+
+    // }
 
 }

@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <math.h>
 #include <time.h>
 #include <unistd.h>
+#include <ctype.h>
+#include <math.h>
+#include "lib.h"
 #include "lib.h"
 #define MAX_ITEMS 50
 #define MAX_CHAR 20
@@ -34,9 +35,8 @@ void printMenu()
         printf("\n 2) Buscar herramienta \n");
         printf("\n 3) Lista de todas las herramientas \n");
         printf("\n 4) Resetear (Vaciamiento) lista \n");
-        printf("\n 5) Historial de prestamos de la jornada \n");
-        printf("\n 6) Historial de prestamos semanal \n");
-        printf("\n 7) Gestionar usuarios \n");
+        printf("\n 5) Gestionar jornada \n");
+        printf("\n 6) Gestionar usuarios \n");
         fflush(stdin);
         scanf("%d",&op);
         system("cls");
@@ -106,14 +106,10 @@ void printMenu()
                 break;
 
             case 5:
-                historial_prestamos_jornada();
+                gestionar_jornada();
                 break;
 
             case 6:
-
-                break;
-
-            case 7:
                  print_sub_menu_usuarios();
 
                 break;
@@ -361,6 +357,33 @@ int existe_dni(int idInput, char *FILE_NAME)
             if(fread(&user, sizeof(user), 1, archivo)==1)
             {
                 if (user.dni==idInput)
+                {
+                    fclose(archivo);
+                    return 1;//ID encontrado
+                }
+            }
+        }
+        fclose(archivo);
+    }
+    else
+    {
+        error_msj_apertura_archivo();
+    }
+    return 0;//ID no encontrado
+
+}
+
+int existe_id_prestamo(int idInput, char *FILE_NAME)
+{
+    prestamo p;
+    FILE * archivo = fopen(FILE_NAME,"rb");
+    if(archivo!=NULL)
+    {
+        while (!feof(archivo)) //mientras el puntero tenga para leer..
+        {
+            if(fread(&p, sizeof(prestamo), 1, archivo)==1)
+            {
+                if (p.prestamoID==idInput)
                 {
                     fclose(archivo);
                     return 1;//ID encontrado
@@ -654,26 +677,47 @@ void registrarPrestamo(int herramientaID)
 // Funci�n para generar un nuevo ID de pr�stamo
 int generarNuevoIDPrestamo()
 {
-    if(archivo_vacio(PRESTAMOS_IDS)==1){
-        FILE * apuntador = fopen(PRESTAMOS_IDS,"rb+");
-        static int id;
+    FILE *apuntador;
+    static int id = 0;
+    if(archivo_vacio(PRESTAMOS_IDS)!=0){
+        apuntador = fopen(PRESTAMOS_IDS,"rb+");
         if(apuntador){
+            // Leer el ID actual desde el archivo
+            if(fread(&id,sizeof(id),1,apuntador)==1){
+                id++; // Incrementar el ID
+            }else{
+                id=1; // Si la lectura falla, iniciar en 1
+            }
 
-        if(fread(&id,sizeof(id),1,apuntador)==0){
-            id++;
-        }else{
-            id=1;
-        }
+            // Mover el puntero de archivo al inicio para sobreescribir el ID
+            fseek(apuntador, 0, SEEK_SET);
+
+            // Escribir el nuevo ID en el archivo
+            fwrite(&id, sizeof(id), 1, apuntador);
+
+            // Cerrar el archivo
+            fclose(apuntador);
 
     }else{
         mensaje_peligro("Error al abrir el archivo\n");
+         return -1; // Indicar error
     }
-    fclose(apuntador);
-    return id;
+
     }else{
+        // Si el archivo no existe, se crea con el primer ID
         printf("El archivo debe ser creado\n");
         crear_binario(PRESTAMOS_IDS);
+        id = 1;
+        apuntador = fopen(PRESTAMOS_IDS, "wb");
+        if (apuntador) {
+            fwrite(&id, sizeof(id), 1, apuntador);
+            fclose(apuntador);
+        } else {
+            mensaje_peligro("Error al crear el archivo\n");
+            return -1; // Indicar error
+        }
     }
+    return id;
 }
 
 // Funci�n para obtener la fecha actual
@@ -708,59 +752,44 @@ void obtenerHoraActual(char *hora) {
 void configurar_jornada(const char *horaInicioJornada, const char *horaFinJornada)
 {
     int formatoCorrecto = 1;
-    printf("Ingrese la hora de inicio de la jornada (hh:mm) (FORMATO 24 HS):\n");
-    fflush(stdin);
-    scanf("%s",horaInicioJornada);
-    // Verificar que el formato de hora sea correcto
-    if (strlen(horaInicioJornada) != 5 || horaInicioJornada[2] != ':') {
-        printf("Formato de hora incorrecto. Debe ser hh:mm\n");
-        formatoCorrecto = 0;
-    } else {
-        int hora = 0, minuto = 0;
-        sscanf(horaInicioJornada, "%d:%d", &hora, &minuto);
-        if (hora < 0 || hora > 23 || minuto < 0 || minuto > 59) {
-            printf("Formato de hora incorrecto. La hora debe estar entre 00 y 23 y los minutos entre 00 y 59\n");
-            formatoCorrecto = 0;
-        }
-    }
-
-    if (formatoCorrecto) {
-        printf("Ingrese la hora de fin de la jornada (hh:mm) (FORMATO 24 HS):\n");
-        fflush(stdin);
-        scanf("%s",horaFinJornada);
-        // Verificar que el formato de hora sea correcto
-        if (strlen(horaFinJornada) != 5 || horaFinJornada[2] != ':') {
-            printf("Formato de hora incorrecto. Debe ser hh:mm\n");
-            formatoCorrecto = 0;
-        } else {
-            int hora = 0, minuto = 0;
-            sscanf(horaFinJornada, "%d:%d", &hora, &minuto);
-            if (hora < 0 || hora > 23 || minuto < 0 || minuto > 59) {
-                printf("Formato de hora incorrecto. La hora debe estar entre 00 y 23 y los minutos entre 00 y 59\n");
+    do{
+            printf("Ingrese la hora de inicio de la jornada (hh:mm) (FORMATO 24 HS):\n");
+            fflush(stdin);
+            scanf("%s",horaInicioJornada);
+            // Verificar que el formato de hora sea correcto
+            if (strlen(horaInicioJornada) != 5 || horaInicioJornada[2] != ':') {
+                printf("Formato de hora incorrecto. Debe ser hh:mm\n");
                 formatoCorrecto = 0;
+            } else {
+                int hora = 0, minuto = 0;
+                sscanf(horaInicioJornada, "%d:%d", &hora, &minuto);
+                if (hora < 0 || hora > 23 || minuto < 0 || minuto > 59) {
+                    printf("Formato de hora incorrecto. La hora debe estar entre 00 y 23 y los minutos entre 00 y 59\n");
+                    formatoCorrecto = 0;
+                }
             }
-        }
-    }
 
-    if (!formatoCorrecto) {
-        // Si el formato de hora no es correcto, devolver 0
-        return 0;
-    }else{
-        //si el formato es correcto
-
-        //si el 'periodos_jornadas' no está vacío...
-        if(archivo_vacio("periodos_jornadas.dat")==1){
-                FILE *fp = fopen("periodos_jornadas.dat","ab+");
-            if(fp){
-
-            }else{
-                error_msj_apertura_archivo();
+            if (formatoCorrecto) {
+                printf("Ingrese la hora de fin de la jornada (hh:mm) (FORMATO 24 HS):\n");
+                fflush(stdin);
+                scanf("%s",horaFinJornada);
+                // Verificar que el formato de hora sea correcto
+                if (strlen(horaFinJornada) != 5 || horaFinJornada[2] != ':') {
+                    printf("Formato de hora incorrecto. Debe ser hh:mm\n");
+                    formatoCorrecto = 0;
+                } else {
+                    int hora = 0, minuto = 0;
+                    sscanf(horaFinJornada, "%d:%d", &hora, &minuto);
+                    if (hora < 0 || hora > 23 || minuto < 0 || minuto > 59) {
+                        printf("Formato de hora incorrecto. La hora debe estar entre 00 y 23 y los minutos entre 00 y 59\n");
+                        formatoCorrecto = 0;
+                    }
+                }
             }
-        }else{
-
-        }
-
-    }
+        system("cls");
+    }while(formatoCorrecto==0);
+        //system("pause");
+        //return 1;
 }
 
 void imprimirPrestamo(int id_prestamo,int herramientaID){
@@ -775,7 +804,7 @@ void imprimirPrestamo(int id_prestamo,int herramientaID){
                     if(p.prestamoID==id_prestamo){
                                 while(!feof(inventario)){
                             if(fread(&obj,sizeof(obj),1,inventario)==1){
-                                    if(obj.id==herramientaID){
+                                    if(obj.id==herramientaID){ 
                                     mensaje_info("-------------------------------\n");
                                     printf("ID PRESTAMO: %d\n",p.prestamoID);
                                     printf("Herramienta solicitada: %s\n",obj.nombre);
@@ -852,10 +881,11 @@ void historial_prestamos_jornada() {
                     printf("Hora de prestamo: %s\n", p.horaPrestamo);
                     //printf("Inicio jornada: %s\n", p.horaInicioJornada);
                     //printf("Fin jornada: %s\n", p.horaFinJornada);
-                    if (strcmp(p.horaDevolucion, "") == 0) {
+                    printf("HORA DEV TEST: %s\n",p.horaDevolucion);
+                    if (strcmp(p.horaDevolucion,"") == 0) {
                         printf("Hora de devolucion: PENDIENTE\n");
                     } else {
-                        printf("Hora de devolución: %s\n", p.horaDevolucion);
+                        printf("Hora de devolucion: %s\n", p.horaDevolucion);
                     }
                     mensaje_exito("---------------------------------\n");
                     //imprimir información del solicitante
@@ -914,14 +944,14 @@ int archivo_vacio(char *nombre_archivo)
     if (archivo == NULL)
     {
         perror("No se pudo abrir el archivo");
-        return 1; // Consideramos vacío si no se puede abrir
+        return 0; // Consideramos vacío si no se puede abrir
     }
 
     fseek(archivo, 0, SEEK_END);
     long size = ftell(archivo);
     fclose(archivo);
 
-    return size == 0; // Retorna 1 si el archivo está vacío, 0 si no lo está
+    return size; 
 }
 
 void crear_binario(char *nombre_binario)
@@ -1070,7 +1100,7 @@ void print_sub_menu_usuarios(){
         printf("\n 0) Volver \n");
         printf("\n 1) Agregar usuario\n");
         printf("\n 2) Eliminar usuario \n");
-        printf("\n 3) Listar operarios \n");
+        printf("\n 3) Listar usuarios \n");
         fflush(stdin);
         scanf("%d",&op);
         system("cls");
@@ -1109,11 +1139,8 @@ int login() {
     scanf("%d", &dni);
     tipo=1; //administrador
 
-    printf("Ingrese su nombre: ");
-    scanf("%49s", nombre); // Leave space for null terminator
-
     printf("Ingrese su password: ");
-    scanf("%49s", password); // Leave space for null terminator
+    scanf("%49s", password); 
 
     // Abrir archivo de usuarios en modo lectura
     FILE *fp = fopen("usuarios.dat", "rb");
@@ -1129,6 +1156,7 @@ int login() {
     while (fread(&usuario_logueado, sizeof(usuario), 1, fp) == 1) {
         if (usuario_logueado.dni == dni && usuario_logueado.tipo == tipo  && strcmp(usuario_logueado.password, password) == 0) {
             encontrado = 1;
+            strcpy(nombre,usuario_logueado.nombre);
             break;
         }
     }
@@ -1140,11 +1168,9 @@ int login() {
         if (tipo == 1) {
             // Iniciar sesión como administrador
             printf("Bienvenido, %s!\n",nombre);
-            mostrar_mensaje_intermitente("Redirigiendo a vista de admin..\n",1);
+            mostrar_mensaje_intermitente("Redirigiendo..\n",1);
             system("pause");
             system("cls");
-            // Mostrar menú de administrador
-            printMenu();
             return 1;
         }
     } else {
@@ -1216,65 +1242,158 @@ void imprimir_usuarios(int tipo_usuario){
 
 
 
-void temporizador(char *hora_inicio, char *hora_fin) {
-    FILE *fp;
-    time_t inicio, fin, ahora;
-    struct tm *tm_inicio, *tm_fin, *tm_ahora;
-    int segundos_inicio, segundos_fin, segundos_ahora;
-    char hora_actual[6];
 
-    // Verificar formato de hora_inicio y hora_fin
-    if (strlen(hora_inicio)!= 5 || strlen(hora_fin)!= 5 ||
-        hora_inicio[2]!= ':' || hora_fin[2]!= ':') {
-        printf("Error: formato de hora incorrecto. Debe ser hh:mm\n");
+
+// Función para convertir una cadena de formato "HH:MM:SS" a segundos
+int timeToSeconds(const char *timeStr) {
+    int h, m, s;
+    sscanf(timeStr, "%d:%d:%d", &h, &m, &s);
+    return h * 3600 + m * 60 + s;
+}
+
+// Función para convertir segundos a cadena de formato "HH:MM:SS"
+void secondsToTime(int seconds, char *timeStr) {
+    int h = seconds / 3600;
+    int m = (seconds % 3600) / 60;
+    int s = seconds % 60;
+    sprintf(timeStr, "%02d:%02d:%02d", h, m, s);
+}
+
+// Función principal de temporizador
+void startTimer(const char *startTime, const char *endTime) {
+    int startSeconds = timeToSeconds(startTime);
+    int endSeconds = timeToSeconds(endTime);
+    int remainingSeconds = endSeconds - startSeconds;
+
+    if (remainingSeconds <= 0) {
+        printf("El tiempo de fin debe ser mayor que el tiempo de inicio.\n");
         return;
     }
 
-    // Convertir hora_inicio y hora_fin a segundos desde la medianoche
-    tm_inicio = malloc(sizeof(struct tm));
-    tm_fin = malloc(sizeof(struct tm));
-    sscanf(hora_inicio, "%d:%d", &tm_inicio->tm_hour, &tm_inicio->tm_min);
-    sscanf(hora_fin, "%d:%d", &tm_fin->tm_hour, &tm_fin->tm_min);
-    tm_inicio->tm_sec = 0;
-    tm_fin->tm_sec = 0;
-    inicio = mktime(tm_inicio);
-    fin = mktime(tm_fin);
-    segundos_inicio = (int) difftime(inicio, 0);
-    segundos_fin = (int) difftime(fin, 0);
+    printf("Cuenta regresiva desde %s hasta %s\n", startTime, endTime);
 
-    // Abrir archivo temporizador.dat en modo append
-    fp = fopen(TEMPORIZADOR_DAT, "ab+");
-    if (fp == NULL) {
-        printf("Error: no se pudo abrir el archivo temporizador.dat\n");
-        return;
-    }
+    int warned = 0; // Variable para controlar el aviso de una hora restante
 
-    // Leer último valor guardado en el archivo
-    fseek(fp, 0, SEEK_END);
-    if (ftell(fp) > 0) {
-        fseek(fp, 0, SEEK_SET);
-        fread(&segundos_ahora, sizeof(int), 1, fp);
-    } else {
-        segundos_ahora = segundos_inicio;
-    }
+    while (remainingSeconds > 0) {
+        char currentTime[9];
+        secondsToTime(remainingSeconds, currentTime);
+        printf("Faltan %s\n", currentTime);
 
-    // Ejecutar temporizador
-    while (segundos_ahora < segundos_fin) {
-        ahora = time(NULL);
-        tm_ahora = localtime(&ahora);
-        strftime(hora_actual, 6, "%H:%M", tm_ahora);
-        printf("\r%s", hora_actual);
-        fflush(stdout);
-        segundos_ahora++;
-        fwrite(&segundos_ahora, sizeof(int), 1, fp);
+        // Avisar cuando falte exactamente 1 hora
+        if (remainingSeconds == 3600 && !warned) {
+            printf("Falta 1 hora!\n");
+            warned = 1; // Asegurarse de que solo avise una vez
+            historial_prestamos_jornada();
+            system("pause");
+        }
+
         sleep(1);
+        remainingSeconds--;
+        system("cls");
     }
 
-    // Cerrar archivo
-    fclose(fp);
-    free(tm_inicio);
-    free(tm_fin);
+    printf("Tiempo terminado!\n");
 }
 
 
+void devolver_prestamo_id(int id_prestamo){
+    int id_herramienta, cantidad_devolver, encontrado=0, herramienta_encontrada=0;
+    char hora_dev[6];
+    prestamo p;
+    herramienta h;
+    FILE *fp =fopen(PRESTAMOS,"rb");
+    FILE *f_aux=fopen("prestamos_aux.dat","wb");
+    if(fp){
+        while(!feof(fp)){
+            if(fread(&p,sizeof(prestamo),1,fp)==1){
+                //si es el id_prestamo, copiamos los datos de la herramienta que fue prestada
+                if(p.prestamoID==id_prestamo){
+                    id_herramienta=p.herramientaID;
+                    cantidad_devolver=p.cantidad;
+                    encontrado=1;
+                    obtenerHoraActual(&hora_dev);
+                    strcpy(p.horaDevolucion,hora_dev);
+                    fwrite(&p,sizeof(prestamo),1,f_aux);
 
+                }else{
+                    fwrite(&p,sizeof(prestamo),1,f_aux);
+                }
+            }
+        }
+    }
+    fclose(fp);
+    fclose(f_aux);
+
+    if(encontrado){
+        remove(PRESTAMOS);
+        rename("prestamos_aux.dat",PRESTAMOS);
+        FILE *archivo=fopen(NOM_ARCHIVO,"rb+");
+        FILE *archivo_aux=fopen("herramientas_aux.dat","wb");
+        if(archivo){
+            while(!feof(archivo)){
+                if(fread(&h,sizeof(herramienta),1,archivo)==1){
+                    if(h.id==id_herramienta){
+                        h.stock+=cantidad_devolver;
+                        herramienta_encontrada=1;
+                    }
+                    fwrite(&h,sizeof(herramienta),1,archivo_aux);
+                }
+            }
+        }
+        fclose(archivo);
+        fclose(archivo_aux);
+        if(herramienta_encontrada){
+            remove(NOM_ARCHIVO);
+            rename("herramientas_aux.dat",NOM_ARCHIVO);
+        }
+        mensaje_exito("Prestamo devuelto");
+        printf("\n");
+    }else{
+        mensaje_peligro("Prestamo no encontrado");
+        printf("\n");
+    }
+    
+}
+
+void gestionar_jornada(){
+    int op,id_prestamo;
+    do{
+        printf("\n0) Volver\n");
+        printf("\n1) Historial de prestamos de la jornada \n");
+        printf("\n2) Devolver prestamo por ID\n");
+        fflush(stdin);
+        scanf("%d", &op);
+        if(op!=0){
+            switch(op){
+                case 1: historial_prestamos_jornada();
+                    break;
+
+                case 2:
+                    printf("Ingrese el ID del prestamo a devolver\n");
+                    fflush(stdin);
+                    scanf("%d", &id_prestamo);
+                    if(existe_id_prestamo(id_prestamo,PRESTAMOS)==1){
+                        devolver_prestamo_id(id_prestamo);
+                    }else{
+                        printf("El prestamo con ID '%d' no se encuentra en los registros\n",id_prestamo);
+                        sleep(2);
+                        system("cls");
+                    }
+                    
+                    break;
+                
+            }
+        }
+
+    }while(op!=0);
+}
+
+
+void alerta_cerrar(int dato){
+    int contador;
+    contador=0;
+    while(dato!=1){
+        contador++;
+    }
+        printf("Falta 1 hora para cerrar la jornada\n");
+}

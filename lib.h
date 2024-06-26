@@ -3,10 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <math.h>
-#include <time.h>
+#define MAX_ITEMS 50
 #define MAX_CHAR 20
+#define MAX_STOCK 100
 typedef struct herramientas{
     int id,stock,estado;
     char nombre[MAX_CHAR];
@@ -34,7 +37,7 @@ int buscarId(int id_buscado);
 int longitud_de_entero(int entero);
 int num_items_reg();
 int generarNuevoIDPrestamo();
-void configurar_jornada(const char *horaInicioJornada, const char *horaFinJornada);
+
 
 
 void printMenu();
@@ -62,7 +65,16 @@ void cargar_usuario();
 void print_sub_menu_usuarios();
 int login();
 int buscar_operario(int dni);
-void temporizador(char *hora_inicio, char *hora_fin);
+
+int timeToSeconds(const char *timeStr);
+void secondsToTime(int seconds, char *timeStr);
+void startTimer(const char *startTime, const char *endTime);
+
 void eliminar_usuario();
+int existe_id_prestamo(int idInput, char *FILE_NAME);
+void gestionar_jornada();
+void configurar_jornada(const char *horaInicioJornada, const char *horaFinJornada);
+void mostrar_mensaje_intermitente(const char *mensaje, int duracion);
+void alerta_cerrar(int dato);
 
 #endif // LIB_H_INCLUDED

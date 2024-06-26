@@ -12,22 +12,9 @@
 
 int main()
 {
-    const char hora_inicio_jornada[6],hora_fin_jornada[6];
+    
         if(login()==1){
-            configurar_jornada(&hora_inicio_jornada,&hora_fin_jornada);
-            //startTimer(hora_inicio_jornada, hora_fin_jornada);
             printMenu();
         }
-        
-    
-
-    
-    
-
-
-
-
-
-    // }
 
 }

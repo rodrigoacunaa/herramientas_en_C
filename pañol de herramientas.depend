@@ -26,7 +26,7 @@
 	<math.h>
 	<time.h>
 
-1719414491 source:c:\users\rodri\desktop\archivos codeblocks\herramientas_en_c\lib.c
+1719415726 source:c:\users\rodri\desktop\archivos codeblocks\herramientas_en_c\lib.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -37,7 +37,7 @@
 	"lib.h"
 	"lib.h"
 
-1719413358 c:\users\rodri\desktop\archivos codeblocks\herramientas_en_c\lib.h
+1719415917 c:\users\rodri\desktop\archivos codeblocks\herramientas_en_c\lib.h
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -46,7 +46,7 @@
 	<ctype.h>
 	<math.h>
 
-1719414608 source:c:\users\rodri\desktop\archivos codeblocks\herramientas_en_c\main.c
+1719416226 source:c:\users\rodri\desktop\archivos codeblocks\herramientas_en_c\main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>

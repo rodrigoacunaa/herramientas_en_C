@@ -18,7 +18,7 @@
 herramienta obj;
 char horaInicioJornada[6];
 char horaFinJornada[6];
-
+const char hora_inicio_jornada[9],hora_fin_jornada[9];
 void printMenu()
 {
     int op,salir,i,id,idBuscado;
@@ -26,6 +26,8 @@ void printMenu()
     char nombre_archivo2[20];
     salir=1;
     i=0;
+        configurar_jornada(&hora_inicio_jornada,&hora_fin_jornada);
+            
 
     do
     {

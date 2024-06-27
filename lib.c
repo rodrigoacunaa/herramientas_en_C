@@ -317,6 +317,7 @@ int num_items_reg()
     n_actual=0;
 
     while (fread(&obj.id, sizeof(obj.id), 1, archivo)==1)n_actual++;
+    fclose(archivo);
     return n_actual;
 }
 
@@ -419,8 +420,6 @@ void imprimirHerramienta(FILE * archivo)
         }
     }
 }
-
-
 
 void resetArchivo(char *file_name)
 {
@@ -610,12 +609,16 @@ void registrarPrestamo(int herramientaID)
                             printf("DNI de operario solicitante (FORMATO ACEPTADO: DNI DE ALMENOS 8 ENTEROS)\n");
                             fflush(stdin);
                             scanf("%d",&p.dni_operario);
+                            fclose(Parchivo);
+                            fclose(inventario);
                         }while(longitud_de_entero(p.dni_operario)<8);
 
                         if(buscar_operario(p.dni_operario)==0){
                             printf("El operario con dni '%d' no existe, vuelva a intentar\n ",p.dni_operario);
                             mostrar_mensaje_intermitente("Volviendo..",1);
                             buscarHerramientaArch(herramientaID);
+                            fclose(Parchivo);
+                            fclose(inventario);
                         }else{
                                     do
                                     {
@@ -656,6 +659,8 @@ void registrarPrestamo(int herramientaID)
                                         mostrar_mensaje_intermitente("La cantidad supera el stock disponible!",1);
                                         printf("Herramienta: %s \n",obj.nombre);
                                         printf("Cantidad disponible: %d \n",obj.stock);
+                                        fclose(Parchivo);
+                                        fclose(inventario);
                                         buscarHerramientaArch(herramientaID);
 
                                     }

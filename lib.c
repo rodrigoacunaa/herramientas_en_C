@@ -665,10 +665,6 @@ void registrarPrestamo(int herramientaID)
 
                                     }
                         }
-
-
-
-
                     }
                 }
             }
@@ -681,7 +677,7 @@ void registrarPrestamo(int herramientaID)
     }
 }
 
-// Funci�n para generar un nuevo ID de pr�stamo
+// Función para generar un nuevo ID de pr�stamo
 int generarNuevoIDPrestamo()
 {
     FILE *apuntador;
@@ -727,7 +723,7 @@ int generarNuevoIDPrestamo()
     return id;
 }
 
-// Funci�n para obtener la fecha actual
+// Función para obtener la fecha actual
 void obtenerFechaActual(char *fecha) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
@@ -741,7 +737,7 @@ void obtenerFechaActual(char *fecha) {
     //printf("Fecha obtenida: %s\n", fecha);  // Depuraci�n
 }
 
-// Funci�n para obtener la hora actual
+// Función para obtener la hora actual
 void obtenerHoraActual(char *hora) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
@@ -755,7 +751,7 @@ void obtenerHoraActual(char *hora) {
     //printf("Hora obtenida: %s\n", hora);  // Depuraci�n
 }
 
-//Funci�n para configurar el horario de inicio y fin de la jornada laboral
+//Función para configurar el horario de inicio y fin de la jornada laboral
 void configurar_jornada(const char *horaInicioJornada, const char *horaFinJornada)
 {
     int formatoCorrecto = 1;
@@ -1015,12 +1011,10 @@ void cargar_usuario() {
         printf("\n");
             sleep(2);
             system("cls");
-            print_sub_menu_usuarios();
         }else{
             mensaje_peligro("Dni ya registrado, vuelva a intentar.\n");
             system("pause");
             system("cls");
-            print_sub_menu_usuarios();
 
         }
 
@@ -1246,63 +1240,6 @@ void imprimir_usuarios(int tipo_usuario){
 }
 
 
-
-
-
-
-
-// Función para convertir una cadena de formato "HH:MM:SS" a segundos
-int timeToSeconds(const char *timeStr) {
-    int h, m, s;
-    sscanf(timeStr, "%d:%d:%d", &h, &m, &s);
-    return h * 3600 + m * 60 + s;
-}
-
-// Función para convertir segundos a cadena de formato "HH:MM:SS"
-void secondsToTime(int seconds, char *timeStr) {
-    int h = seconds / 3600;
-    int m = (seconds % 3600) / 60;
-    int s = seconds % 60;
-    sprintf(timeStr, "%02d:%02d:%02d", h, m, s);
-}
-
-// Función principal de temporizador
-void startTimer(const char *startTime, const char *endTime) {
-    int startSeconds = timeToSeconds(startTime);
-    int endSeconds = timeToSeconds(endTime);
-    int remainingSeconds = endSeconds - startSeconds;
-
-    if (remainingSeconds <= 0) {
-        printf("El tiempo de fin debe ser mayor que el tiempo de inicio.\n");
-        return;
-    }
-
-    printf("Cuenta regresiva desde %s hasta %s\n", startTime, endTime);
-
-    int warned = 0; // Variable para controlar el aviso de una hora restante
-
-    while (remainingSeconds > 0) {
-        char currentTime[9];
-        secondsToTime(remainingSeconds, currentTime);
-        printf("Faltan %s\n", currentTime);
-
-        // Avisar cuando falte exactamente 1 hora
-        if (remainingSeconds == 3600 && !warned) {
-            printf("Falta 1 hora!\n");
-            warned = 1; // Asegurarse de que solo avise una vez
-            historial_prestamos_jornada();
-            system("pause");
-        }
-
-        sleep(1);
-        remainingSeconds--;
-        system("cls");
-    }
-
-    printf("Tiempo terminado!\n");
-}
-
-
 void devolver_prestamo_id(int id_prestamo){
     int id_herramienta, cantidad_devolver, encontrado=0, herramienta_encontrada=0;
     char hora_dev[6];
@@ -1376,9 +1313,10 @@ void gestionar_jornada(){
                     break;
 
                 case 2:
-                    printf("Ingrese el ID del prestamo a devolver\n");
+                    printf("Ingrese el ID del prestamo a devolver (-1 para cancelar)\n");
                     fflush(stdin);
                     scanf("%d", &id_prestamo);
+                    if(id_prestamo!=-1){
                     if(existe_id_prestamo(id_prestamo,PRESTAMOS)==1){
                         devolver_prestamo_id(id_prestamo);
                     }else{
@@ -1386,21 +1324,11 @@ void gestionar_jornada(){
                         sleep(2);
                         system("cls");
                     }
-                    
+                }
                     break;
                 
             }
         }
 
     }while(op!=0);
-}
-
-
-void alerta_cerrar(int dato){
-    int contador;
-    contador=0;
-    while(dato!=1){
-        contador++;
-    }
-        printf("Falta 1 hora para cerrar la jornada\n");
 }

@@ -55,7 +55,6 @@ void printMenu()
             case 1:
                 cargarHerramientaArch();
                 printf("\n");
-                system("pause");
                 salir=1;
                 break;
 
@@ -79,32 +78,38 @@ void printMenu()
             case 4:
                         do{
                         printf("Que tabla desea vaciar? (SOLO OPCIONES VALIDAS)\n");
+                        printf("0) Volver \n");
                         printf("1) TABLA DE INVENTARIO\n");
                         printf("2) TABLA DE PRESTAMOS\n");
                         fflush(stdin);
                         scanf("%d",&op);
-                        if(op==1 || op==2){
-                            switch (op)
-                            {
-                            case 1:
-                                    strcpy(nombre_archivo,NOM_ARCHIVO);
+                        if(op!=0){
+                                if(op==1 || op==2){
+                                switch (op)
+                                {
+                                case 1:
+                                        strcpy(nombre_archivo,NOM_ARCHIVO);
 
-                                break;
+                                    break;
 
-                            case 2:
-                                    strcpy(nombre_archivo,PRESTAMOS);
+                                case 2:
+                                        strcpy(nombre_archivo,PRESTAMOS);
 
-                                    strcpy(nombre_archivo2,PRESTAMOS_IDS);
-                                break;
+                                        strcpy(nombre_archivo2,PRESTAMOS_IDS);
+                                    break;
 
-                            default:
-                                break;
+                                default:
+                                    break;
+                                }
                             }
                         }
-                             }while(op<1 || op>2);
-                             resetArchivo(nombre_archivo);
-                             resetArchivo(nombre_archivo2);
-
+                        
+                    }while(op<0 || op>2);
+                    if(op!=0){
+                        resetArchivo(nombre_archivo);
+                        resetArchivo(nombre_archivo2);
+                    }
+                             
                 break;
 
             case 5:
@@ -139,60 +144,62 @@ void cargarHerramientaArch()
     //char nombre_input[MAX_CHAR];
     do
     {
-        printf("Ingrese el identificador de la herramienta (SOLO SE ADMITEN ENTEROS POSITIVOS DE 4 DIGITOS)\n");
+        printf("Ingrese el identificador de la herramienta (SOLO SE ADMITEN ENTEROS POSITIVOS DE 4 DIGITOS) (-1 para volver)\n");
         fflush(stdin);
         scanf("%d",&idInput);
     }
-    while(idInput<0 || longitud_de_entero(idInput)!=4);
+    while(longitud_de_entero(idInput)!=4 && idInput!=-1);
     //validamos que el formato de id sea respetado forzosamente por el usuario
     system("cls");
 
-    if(existeId(idInput,NOM_ARCHIVO)==0)//si el id no est� registrado, procedemos
-    {
-        herramienta obj;
-        FILE * archivo;
-        archivo=fopen(NOM_ARCHIVO,"ab");
-        if(archivo!=NULL)
+    if(idInput!=-1){
+        if(existeId(idInput,NOM_ARCHIVO)==0)//si el id no est� registrado, procedemos
         {
-            obj.id = idInput;//usamos obj.id para guardar el idInput
-
-            //levantamos los dem�s datos solicitandolos por pantalla
-            printf("Ingrese el nombre de herramienta \n");
-            fflush(stdin);
-            gets(obj.nombre);
-            // Convertimos el nombre a may�sculas
-            for (int i = 0; obj.nombre[i]; i++)
+            herramienta obj;
+            FILE * archivo;
+            archivo=fopen(NOM_ARCHIVO,"ab");
+            if(archivo!=NULL)
             {
-                obj.nombre[i] = toupper(obj.nombre[i]);
-            }
+                obj.id = idInput;//usamos obj.id para guardar el idInput
+
+                //levantamos los dem�s datos solicitandolos por pantalla
+                printf("Ingrese el nombre de herramienta \n");
+                fflush(stdin);
+                gets(obj.nombre);
+                // Convertimos el nombre a may�sculas
+                for (int i = 0; obj.nombre[i]; i++)
+                {
+                    obj.nombre[i] = toupper(obj.nombre[i]);
+                }
 
 
-            printf("Ingrese el stock disponible \n");
-            fflush(stdin);
-            scanf("%d",&obj.stock);
+                printf("Ingrese el stock disponible \n");
+                fflush(stdin);
+                scanf("%d",&obj.stock);
 
-            fwrite(&obj, sizeof(obj), 1, archivo);
+                fwrite(&obj, sizeof(obj), 1, archivo);
 
-            if(fclose(archivo)==0)
-            {
-                mensaje_exito("Archivo correctamente guardado!");
-                printf("\n");
-                return;
+                if(fclose(archivo)==0)
+                {
+                    mensaje_exito("Archivo correctamente guardado!");
+                    printf("\n");
+                    return;
+                }
+                else
+                {
+                    printf("No se pudo guardar el archivo \n");
+                }
             }
             else
             {
-                printf("No se pudo guardar el archivo \n");
+                error_msj_apertura_archivo();
             }
         }
         else
         {
-            error_msj_apertura_archivo();
+            mensaje_advertencia("ID ya registrado");
+            printf("\n");
         }
-    }
-    else
-    {
-        mensaje_advertencia("ID ya registrado");
-        printf("\n");
     }
 }
 
@@ -616,9 +623,9 @@ void registrarPrestamo(int herramientaID)
                         if(buscar_operario(p.dni_operario)==0){
                             printf("El operario con dni '%d' no existe, vuelva a intentar\n ",p.dni_operario);
                             mostrar_mensaje_intermitente("Volviendo..",1);
-                            buscarHerramientaArch(herramientaID);
                             fclose(Parchivo);
                             fclose(inventario);
+                            break;
                         }else{
                                     do
                                     {
@@ -976,10 +983,11 @@ void cargar_usuario() {
     usuario nuevo_usuario;
 
     // Pedir datos al usuario
-    printf("Ingrese su DNI: ");
+    printf("Ingrese su DNI: (-1 para volver)\n");
     scanf("%d", &nuevo_usuario.dni);
 
-    if(existe_dni(nuevo_usuario.dni,"usuarios.dat")==0){
+    if(nuevo_usuario.dni!=-1){
+        if(existe_dni(nuevo_usuario.dni,"usuarios.dat")==0){
         printf("Ingrese su tipo de usuario (1)Administrador, (2)Operario: ");
         scanf("%d", &nuevo_usuario.tipo);
 
@@ -1017,8 +1025,7 @@ void cargar_usuario() {
             system("cls");
 
         }
-
-
+    }
 }
 
 void eliminar_usuario() {
@@ -1033,65 +1040,66 @@ void eliminar_usuario() {
         return;
     }
 
-    printf("Ingrese el DNI del usuario a eliminar: ");
+    printf("Ingrese el DNI del usuario a eliminar: (-1 para volver)\n");
     scanf("%d", &dni);
+    if(dni!=-1){
+            if(existe_dni(dni,"usuarios.dat")==1) {
+            printf("Ingrese el tipo de usuario a eliminar (1)Administrador, (2)Operario: ");
+            scanf("%d", &tipo);
 
-    if(existe_dni(dni,"usuarios.dat")==1) {
-        printf("Ingrese el tipo de usuario a eliminar (1)Administrador, (2)Operario: ");
-        scanf("%d", &tipo);
-
-        //si es administrador, solicitamos su clave para eliminarlo
-        if (tipo == 1) {
-            char password[MAX_CHAR];
-            printf("Ingrese su password: \n");
-            scanf("%s", password);
-            while(!feof(fp)){
-                if(fread(&usuario_a_eliminar,sizeof(usuario_a_eliminar),1,fp)==1){
-                    if(strcmp(usuario_a_eliminar.password,password)==0 && usuario_a_eliminar.dni==dni){
-                            while(!feof(fp))
-                            {
-                                if(fread(&usuario_a_eliminar,sizeof(usuario),1,fp)==1){
-                                    if(usuario_a_eliminar.dni!=dni)
-                                    {
-                                        fwrite(&usuario_a_eliminar,sizeof(usuario),1,temp);
+            //si es administrador, solicitamos su clave para eliminarlo
+            if (tipo == 1) {
+                char password[MAX_CHAR];
+                printf("Ingrese su password: \n");
+                scanf("%s", password);
+                while(!feof(fp)){
+                    if(fread(&usuario_a_eliminar,sizeof(usuario_a_eliminar),1,fp)==1){
+                        if(strcmp(usuario_a_eliminar.password,password)==0 && usuario_a_eliminar.dni==dni){
+                                while(!feof(fp))
+                                {
+                                    if(fread(&usuario_a_eliminar,sizeof(usuario),1,fp)==1){
+                                        if(usuario_a_eliminar.dni!=dni)
+                                        {
+                                            fwrite(&usuario_a_eliminar,sizeof(usuario),1,temp);
+                                        }
                                     }
                                 }
-                            }
-                            encontrado=1;
-                            coincidencia_pwd=1;
+                                encontrado=1;
+                                coincidencia_pwd=1;
 
-                    }
-                }
-            }
-            if(!coincidencia_pwd){
-                mensaje_peligro("Password incorrecto\n");
-            }
-            
-        } else {
-                //leemos el archivo 'original'
-                while(!feof(fp))
-                {
-                    if(fread(&usuario_a_eliminar,sizeof(usuario),1,fp)==1){
-                        if(usuario_a_eliminar.dni!=dni)
-                        {
-                            fwrite(&usuario_a_eliminar,sizeof(usuario),1,temp);
                         }
                     }
                 }
-                encontrado=1;
+                if(!coincidencia_pwd){
+                    mensaje_peligro("Password incorrecto\n");
+                }
+                
+            } else {
+                    //leemos el archivo 'original'
+                    while(!feof(fp))
+                    {
+                        if(fread(&usuario_a_eliminar,sizeof(usuario),1,fp)==1){
+                            if(usuario_a_eliminar.dni!=dni)
+                            {
+                                fwrite(&usuario_a_eliminar,sizeof(usuario),1,temp);
+                            }
+                        }
+                    }
+                    encontrado=1;
+            }
+        } else {
+            printf("Usuario no encontrado\n");
         }
-    } else {
-        printf("Usuario no encontrado\n");
-    }
 
-    fclose(fp);
-    fclose(temp);
+        fclose(fp);
+        fclose(temp);
 
-    if (encontrado) {
-        remove("usuarios.dat");
-        rename("temp_users.dat", "usuarios.dat");
-        mensaje_exito("Usuario eliminado con exito!");
-        printf("\n");
+        if (encontrado) {
+            remove("usuarios.dat");
+            rename("temp_users.dat", "usuarios.dat");
+            mensaje_exito("Usuario eliminado con exito!");
+            printf("\n");
+        }
     }
 }
 

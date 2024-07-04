@@ -56,3 +56,18 @@
 	<math.h>
 	"lib.h"
 
+1720104415 source:c:\users\tomas\desktop\herramientas_en_c\lib.c
+	"lib.h"
+
+1720096833 c:\users\tomas\desktop\herramientas_en_c\lib.h
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<time.h>
+	<unistd.h>
+	<ctype.h>
+	<math.h>
+
+1720101149 source:c:\users\tomas\desktop\herramientas_en_c\main.c
+	"lib.h"
+

@@ -10,6 +10,11 @@
 #define MAX_ITEMS 50
 #define MAX_CHAR 20
 #define MAX_STOCK 100
+#define NOM_ARCHIVO "herramientas.dat"
+#define PRESTAMOS "prestamos.dat"
+#define PRESTAMOS_IDS "prestamos_ids.dat"
+#define TEMPORIZADOR_DAT "temporizador.dat"
+
 typedef struct herramientas{
     int id,stock,estado;
     char nombre[MAX_CHAR];
@@ -33,48 +38,55 @@ typedef struct prestamos{
     int cantidad; //cantidad entregada
 }prestamo;
 
-int buscarId(int id_buscado);
-int longitud_de_entero(int entero);
-int num_items_reg();
-int generarNuevoIDPrestamo();
-
-
-
+///Funcion menu, de donde ramifica todo
 void printMenu();
+
+///Opciones del menu
 void cargarHerramientaArch();
 void buscarHerramientaArch(int idBuscado);
-void imprimirHerramienta(FILE * archivo);
-void prestarHerramientaArch();
+void listarHerramientasArch();
 void resetArchivo(char *file_name);
-void modificar_stock(int id);
+void gestionar_jornada();
+void print_sub_menu_usuarios();
+
+//Funcion de login
+int login();
+
+//Funciones auxiliares
+void configurar_jornada(const char *horaInicioJornada, const char *horaFinJornada);
 void error_msj_apertura_archivo();
-void mensaje_exito(const char* mensaje);
-void mensaje_info(const char* mensaje);
-void mensaje_advertencia(const char* mensaje);
+void crear_binario(char *nombre_binario);
+int longitud_de_entero(int entero);
+int num_items_reg();
+int existeId(int idInput, char *FILE_NAME);
+int existe_dni(int idInput, char *FILE_NAME);
+int existe_id_prestamo(int idInput, char *FILE_NAME);
+void imprimirHerramienta(FILE * archivo);
+void modificar_stock(int id);
 void eliminar_herramienta(int id);
 void registrarPrestamo(int herramientaID);
-void obtenerFechaActual(char *fecha);
-void obtenerHoraActual(char *hora);
+int generarNuevoIDPrestamo();
 void imprimirPrestamo(int id_prestamo,int herramientaID);
-void crear_prestamos();
 void historial_prestamos_jornada();
 char* obtenerNombreHerramienta(int herramientaID);
 int archivo_vacio(char *nombre_archivo);
 void crear_binario(char *nombre_binario);
 void cargar_usuario();
-void print_sub_menu_usuarios();
-int login();
-int buscar_operario(int dni);
-
-int timeToSeconds(const char *timeStr);
-void secondsToTime(int seconds, char *timeStr);
-void startTimer(const char *startTime, const char *endTime);
-
 void eliminar_usuario();
-int existe_id_prestamo(int idInput, char *FILE_NAME);
-void gestionar_jornada();
-void configurar_jornada(const char *horaInicioJornada, const char *horaFinJornada);
+int buscar_operario(int dni);
+void imprimir_usuarios(int tipo_usuario);
+void devolver_prestamo_id(int id_prestamo)
+void gestionar_jornada()
+
+//Funciones de tiempo
+void obtenerHoraActual(char *hora);
+void obtenerFechaActual(char *fecha);
+
+//Funciones de UI
+void mensaje_exito(const char* mensaje);
+void mensaje_info(const char* mensaje);
+void mensaje_advertencia(const char* mensaje);
+void mensaje_peligro(const char* mensaje);
 void mostrar_mensaje_intermitente(const char *mensaje, int duracion);
-void alerta_cerrar(int dato);
 
 #endif // LIB_H_INCLUDED
